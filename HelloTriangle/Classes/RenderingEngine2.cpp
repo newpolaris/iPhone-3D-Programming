@@ -30,6 +30,7 @@ public:
 
 private:
     GLuint LoadShader ( GLenum type, const char *shaderSrc );
+    GLuint m_simpleProgram;
 };
 
 IRenderingEngine* RenderingEngine() {
@@ -42,7 +43,6 @@ RenderingEngine2::RenderingEngine2() {}
 
 int RenderingEngine2::Initialize(ESContext* esContext) 
 {
-   UserData *userData = (UserData*)esContext->userData;
    GLbyte vShaderStr[] =  
       "attribute vec4 vPosition;    \n"
       "void main()                  \n"
@@ -105,7 +105,7 @@ int RenderingEngine2::Initialize(ESContext* esContext)
    }
 
    // Store the program object
-   userData->programObject = programObject;
+   m_simpleProgram = programObject;
 
    glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
 
@@ -161,7 +161,6 @@ GLuint RenderingEngine2::LoadShader ( GLenum type, const char *shaderSrc )
 }
 void RenderingEngine2::Render(ESContext* esContext) const
 {
-   UserData *userData = (UserData*)esContext->userData;
    GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
                            -0.5f, -0.5f, 0.0f,
                             0.5f, -0.5f, 0.0f };
@@ -173,7 +172,7 @@ void RenderingEngine2::Render(ESContext* esContext) const
    glClear ( GL_COLOR_BUFFER_BIT );
 
    // Use the program object
-   glUseProgram ( userData->programObject );
+   glUseProgram ( m_simpleProgram );
 
    // Load the vertex data
    glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
