@@ -87,34 +87,39 @@ int RenderingEngine2::Initialize(int width, int height)
 
 void RenderingEngine2::Render() const
 {
-   GLfloat vVertices[] = {  0.0f,  0.5f, 
-                           -0.5f, -0.5f,
-                            0.5f, -0.5f };
-      
-   // Set the viewport
-   glViewport ( 0, 0, mWidth, mHeight );
-   
-   // Clear the color buffer
-   glClear ( GL_COLOR_BUFFER_BIT );
+	GLfloat vVertices[] = {  0.0f,  0.5f, 
+		-0.5f, -0.5f,
+		0.5f, -0.5f };
 
-   // Use the program object
-   glUseProgram ( m_simpleProgram );
+	// Set the viewport
+	glViewport ( 0, 0, mWidth, mHeight );
 
-   GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
+	// Clear the color buffer
+	glClear ( GL_COLOR_BUFFER_BIT );
 
-   glEnableVertexAttribArray(positionSlot);
+	// Use the program object
+	glUseProgram ( m_simpleProgram );
 
-   GLsizei stride = sizeof(Vertex);
-   const GLvoid* pCoords = &Vertices[0].Position[0];
+	GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
+	GLuint colorSlot = glGetAttribLocation(m_simpleProgram, "SourceColor");
 
-   // Load the vertex data
-   glVertexAttribPointer (positionSlot, 2, GL_FLOAT, GL_FALSE, stride, pCoords);
+	glEnableVertexAttribArray(positionSlot);
+	glEnableVertexAttribArray(colorSlot);
 
-   GLsizei vertexCount = sizeof(Vertices) / sizeof(Vertex);
+	GLsizei stride = sizeof(Vertex);
+	const GLvoid* pCoords = &Vertices[0].Position[0];
+	const GLvoid* pColors = &Vertices[0].Color[0];
 
-   glDrawArrays ( GL_TRIANGLES, 0, vertexCount);
+	// Load the vertex data
+	glVertexAttribPointer (positionSlot, 2, GL_FLOAT, GL_FALSE, stride, pCoords);
+	glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
 
-   glDisableVertexAttribArray(positionSlot);
+	GLsizei vertexCount = sizeof(Vertices) / sizeof(Vertex);
+
+	glDrawArrays ( GL_TRIANGLES, 0, vertexCount);
+
+	glDisableVertexAttribArray(positionSlot);
+	glDisableVertexAttribArray(colorSlot);
 }
 
 
