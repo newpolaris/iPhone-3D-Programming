@@ -25,12 +25,14 @@ static const float RevolutionPerSecond = 1;
 class RenderingEngine2: public IRenderingEngine {
 public:
     RenderingEngine2();
-    int Initialize(ESContext* context);
-    void Render(ESContext*) const;
+    int Initialize(int width, int height);
+    void Render() const;
 
 private:
     GLuint LoadShader ( GLenum type, const char *shaderSrc );
     GLuint m_simpleProgram;
+	int mWidth;
+	int mHeight;
 };
 
 IRenderingEngine* RenderingEngine() {
@@ -41,7 +43,7 @@ IRenderingEngine* RenderingEngine() {
 RenderingEngine2::RenderingEngine2() {}
 
 
-int RenderingEngine2::Initialize(ESContext* esContext) 
+int RenderingEngine2::Initialize(int width, int height) 
 {
    GLbyte vShaderStr[] =  
       "attribute vec4 vPosition;    \n"
@@ -61,6 +63,9 @@ int RenderingEngine2::Initialize(ESContext* esContext)
    GLuint fragmentShader;
    GLuint programObject;
    GLint linked;
+
+   mWidth = width;
+   mHeight = height;
 
    // Load the vertex/fragment shaders
    vertexShader = LoadShader ( GL_VERTEX_SHADER, (const char*)vShaderStr );
@@ -159,14 +164,14 @@ GLuint RenderingEngine2::LoadShader ( GLenum type, const char *shaderSrc )
    return shader;
 
 }
-void RenderingEngine2::Render(ESContext* esContext) const
+void RenderingEngine2::Render() const
 {
    GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
                            -0.5f, -0.5f, 0.0f,
                             0.5f, -0.5f, 0.0f };
       
    // Set the viewport
-   glViewport ( 0, 0, esContext->width, esContext->height );
+   glViewport ( 0, 0, mWidth, mHeight );
    
    // Clear the color buffer
    glClear ( GL_COLOR_BUFFER_BIT );
@@ -179,7 +184,5 @@ void RenderingEngine2::Render(ESContext* esContext) const
    glEnableVertexAttribArray ( 0 );
 
    glDrawArrays ( GL_TRIANGLES, 0, 3 );
-
-   eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
 

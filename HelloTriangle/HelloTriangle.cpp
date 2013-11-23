@@ -18,9 +18,10 @@
 #include "esUtil.h"
 #include "Classes/IRenderingEngine.hpp"
 
-void Draw ( ESContext *esContext )
+void Draw (ESContext* esContext)
 {
-    RenderingEngine()->Render(esContext);
+    RenderingEngine()->Render();
+	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
 
 int main ( int argc, char *argv[] )
@@ -33,7 +34,7 @@ int main ( int argc, char *argv[] )
 
    esCreateWindow ( &esContext, TEXT("Hello Triangle"), 320, 240, ES_WINDOW_RGB );
    
-   if (!RenderingEngine()->Initialize(&esContext))
+   if (!RenderingEngine()->Initialize(esContext.width, esContext.height))
       return 0;
 
    esRegisterDrawFunc ( &esContext, Draw );

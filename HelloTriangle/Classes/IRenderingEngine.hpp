@@ -9,8 +9,8 @@ typedef struct
 
 // OpenGL ES Renderer interface. Used by GLView class
 struct IRenderingEngine {
-	virtual int Initialize(ESContext*) = 0;
-	virtual void Render(ESContext*) const = 0;
+	virtual int Initialize(int width, int height) = 0;
+	virtual void Render() const = 0;
 	virtual ~IRenderingEngine() {}
 };
 
