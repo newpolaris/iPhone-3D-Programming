@@ -1,0 +1,28 @@
+eglGetDisplay(EGLNativeDisplayType display_id = 0x4A011C8F)
+eglInitialize(EGLDisplay dpy = 0x02000A50, EGLint *major = 0x0018FCAC, EGLint *minor = 0x0018FCA0)
+eglGetProcAddress(const char *procname = "eglCreateImageKHR")
+eglGetProcAddress(const char *procname = "eglDestroyImageKHR")
+eglGetProcAddress(const char *procname = "eglPostSubBufferNV")
+eglGetProcAddress(const char *procname = "glEGLImageTargetTexture2DOES")
+eglGetProcAddress(const char *procname = "glDeleteFencesNV")
+eglGetProcAddress(const char *procname = "glGenFencesNV")
+eglGetProcAddress(const char *procname = "glGetFenceivNV")
+eglGetProcAddress(const char *procname = "glIsFenceNV")
+eglGetProcAddress(const char *procname = "glFinishFenceNV")
+eglGetProcAddress(const char *procname = "glSetFenceNV")
+eglGetProcAddress(const char *procname = "glTestFenceNV")
+eglGetConfigs(EGLDisplay dpy = 0x02000A50, EGLConfig *configs = 0x00000000, EGLint config_size = 0, EGLint *num_config = 0x0018FCB8)
+eglChooseConfig(EGLDisplay dpy = 0x02000A50, const EGLint *attrib_list = 0x0018FDCC, EGLConfig *configs = 0x0018FC70, EGLint config_size = 1, EGLint *num_config = 0x0018FCB8)
+eglCreateWindowSurface(EGLDisplay dpy = 0x02000A50, EGLConfig config = 0x00000001, EGLNativeWindowType win = 0x00150A1A, const EGLint *attrib_list = 0x0018FDB4)
+eglCreateContext(EGLDisplay dpy = 0x02000A50, EGLConfig config = 0x00000001, EGLContext share_context = 0x00000000, const EGLint *attrib_list = 0x0018FC58)
+eglMakeCurrent(EGLDisplay dpy = 0x02000A50, EGLSurface draw = 0x02005C00, EGLSurface read = 0x02005C00, EGLContext ctx = 0x01EA6FE0)
+trace: gl::Context::makeCurrent(263): MaxTextureDimension=8192, MaxCubeTextureDimension=8192, MaxRenderbufferDimension=8192, MaxTextureLevel=14, MaxTextureAnisotropy=16.000000
+glCreateShader(GLenum type = 0x8B31)
+glShaderSource(GLuint shader = 1, GLsizei count = 1, const GLchar** string = 0x0018FB78, const GLint* length = 0x00000000)
+glCompileShader(GLuint shader = 1)
+trace: gl::Shader::compileToHLSL(402): 
+ERROR: 0:1: '' : syntax error 
+
+glGetShaderiv(GLuint shader = 1, GLenum pname = 35713, GLint* params = 0x0018FB58)
+glGetShaderiv(GLuint shader = 1, GLenum pname = 35716, GLint* params = 0x0018FB4C)
+glGetShaderInfoLog(GLuint shader = 1, GLsizei bufsize = 32, GLsizei* length = 0x00000000, GLchar* infolog = 0x005A0158)
