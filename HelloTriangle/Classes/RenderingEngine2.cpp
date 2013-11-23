@@ -30,6 +30,9 @@ public:
 
 private:
     GLuint LoadShader ( GLenum type, const char *shaderSrc );
+	GLuint BuildProgram(const char* vertexShaderSource, const char* fragmentShaderSource) const;
+	GLuint BuildShader(const char* source, GLenum shaderType) const;
+
     GLuint m_simpleProgram;
 	int mWidth;
 	int mHeight;
@@ -42,79 +45,76 @@ IRenderingEngine* RenderingEngine() {
 
 RenderingEngine2::RenderingEngine2() {}
 
-
 int RenderingEngine2::Initialize(int width, int height) 
 {
-   GLbyte vShaderStr[] =  
+   const GLbyte vShaderStr[] =  
       "attribute vec4 vPosition;    \n"
       "void main()                  \n"
       "{                            \n"
       "   gl_Position = vPosition;  \n"
       "}                            \n";
    
-   GLbyte fShaderStr[] =  
+   const GLbyte fShaderStr[] =  
       "precision mediump float;\n"\
       "void main()                                  \n"
       "{                                            \n"
       "  gl_FragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );\n"
       "}                                            \n";
 
-   GLuint vertexShader;
-   GLuint fragmentShader;
-   GLuint programObject;
-   GLint linked;
-
    mWidth = width;
    mHeight = height;
 
    // Load the vertex/fragment shaders
-   vertexShader = LoadShader ( GL_VERTEX_SHADER, (const char*)vShaderStr );
-   fragmentShader = LoadShader ( GL_FRAGMENT_SHADER, (const char*)fShaderStr );
-
-   // Create the program object
-   programObject = glCreateProgram ( );
-   
-   if ( programObject == 0 )
-      return 0;
-
-   glAttachShader ( programObject, vertexShader );
-   glAttachShader ( programObject, fragmentShader );
+   m_simpleProgram = BuildProgram((const char*)vShaderStr, (const char*)fShaderStr);
 
    // Bind vPosition to attribute 0   
-   glBindAttribLocation ( programObject, 0, "vPosition" );
+   // glBindAttribLocation ( programObject, 0, "vPosition" );
 
-   // Link the program
-   glLinkProgram ( programObject );
-
-   // Check the link status
-   glGetProgramiv ( programObject, GL_LINK_STATUS, &linked );
-
-   if ( !linked ) 
-   {
-      GLint infoLen = 0;
-
-      glGetProgramiv ( programObject, GL_INFO_LOG_LENGTH, &infoLen );
-      
-      if ( infoLen > 1 )
-      {
-         char* infoLog = (char*)malloc (sizeof(char) * infoLen );
-
-         glGetProgramInfoLog ( programObject, infoLen, NULL, infoLog );
-         esLogMessage ( "Error linking program:\n%s\n", infoLog );            
-         
-         free ( infoLog );
-      }
-
-      glDeleteProgram ( programObject );
-      return FALSE;
-   }
-
-   // Store the program object
-   m_simpleProgram = programObject;
 
    glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
 
    return TRUE;
+}
+
+
+
+GLuint RenderingEngine2::BuildProgram(const char* vertexShaderSource, const char* fragmentShaderSource) const {
+    GLuint vertexShader = BuildShader(vertexShaderSource, GL_VERTEX_SHADER);
+    GLuint fragmentShader = BuildShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+
+    GLuint programHandle = glCreateProgram();
+    glAttachShader(programHandle, vertexShader);
+    glAttachShader(programHandle, fragmentShader);
+    glLinkProgram(programHandle);
+
+    GLint linkSuccess;
+    glGetProgramiv(programHandle, GL_LINK_STATUS, &linkSuccess);
+    if (linkSuccess == GL_FALSE) {
+        GLchar messages[256];
+        glGetProgramInfoLog(programHandle, sizeof(messages), 0, &messages[0]);
+        std::cout << messages;
+        exit(1);
+    }
+
+    return programHandle;
+}
+
+GLuint RenderingEngine2::BuildShader(const char* source, GLenum shaderType) const {
+    GLuint shaderHandle = glCreateShader(shaderType);
+    glShaderSource(shaderHandle, 1, &source, 0);
+    glCompileShader(shaderHandle);
+
+    GLint  compileSuccess;
+    glGetShaderiv(shaderHandle, GL_COMPILE_STATUS, &compileSuccess);
+
+    if (compileSuccess == GL_FALSE) {
+        GLchar messages[256];
+        glGetShaderInfoLog(shaderHandle, sizeof(messages), 0, &messages[0]);
+        std::cout << messages;
+        exit(1);
+    }
+
+    return shaderHandle;
 }
 
 ///
