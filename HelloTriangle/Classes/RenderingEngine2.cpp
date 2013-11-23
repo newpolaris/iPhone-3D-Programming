@@ -42,29 +42,40 @@ IRenderingEngine* RenderingEngine() {
     return &engine;
 }
 
-RenderingEngine2::RenderingEngine2() {}
+struct Vertex {
+    float Position[2];
+    float Color[4];
+};
+
+const Vertex Vertices[] = {
+    {{-0.5, -0.866},        {1, 1, 0.5f, 1}},
+    {{0.5, -0.866},                {1, 1, 0.5f, 1}},
+    {{0, 1},                        {1, 1, 0.5f, 1}},
+    {{-0.5, -0.866},        {0.5f, 0.5f, 0.5f}},
+    {{0.5, -0.866},                {0.5f, 0.5f, 0.5f}},
+    {{0, -0.4f},                {0.5f, 0.5f, 0.5f}}
+};
+
+RenderingEngine2::RenderingEngine2() 
+{
+    // glGenRenderbuffers(1, &m_renderbuffer);
+    // glBindRenderbuffer(GL_RENDERBUFFER, m_renderbuffer);
+}
 
 int RenderingEngine2::Initialize(int width, int height) 
 {
-   const GLbyte vShaderStr[] =  
-      "attribute vec4 vPosition;    \n"
-      "void main()                  \n"
-      "{                            \n"
-      "   gl_Position = vPosition;  \n"
-      "}                            \n";
-   
-   const GLbyte fShaderStr[] =  
-      "precision mediump float;\n"\
-      "void main()                                  \n"
-      "{                                            \n"
-      "  gl_FragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );\n"
-      "}                                            \n";
-
    mWidth = width;
    mHeight = height;
 
+    //create framebuffer object and attach the colour buffer
+    /*
+    glGenFramebuffers(1, &m_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_renderbuffer);
+    */
+
    // Load the vertex/fragment shaders
-   m_simpleProgram = BuildProgram((const char*)vShaderStr, (const char*)fShaderStr);
+   m_simpleProgram = BuildProgram(SimpleVertexShader, SimpleFragmentShader );
 
    // Bind vPosition to attribute 0   
    // glBindAttribLocation ( programObject, 0, "vPosition" );
@@ -76,9 +87,9 @@ int RenderingEngine2::Initialize(int width, int height)
 
 void RenderingEngine2::Render() const
 {
-   GLfloat vVertices[] = {  0.0f,  0.5f, 0.0f, 
-                           -0.5f, -0.5f, 0.0f,
-                            0.5f, -0.5f, 0.0f };
+   GLfloat vVertices[] = {  0.0f,  0.5f, 
+                           -0.5f, -0.5f,
+                            0.5f, -0.5f };
       
    // Set the viewport
    glViewport ( 0, 0, mWidth, mHeight );
@@ -89,11 +100,16 @@ void RenderingEngine2::Render() const
    // Use the program object
    glUseProgram ( m_simpleProgram );
 
+   GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
+
+   glEnableVertexAttribArray(positionSlot);
+
    // Load the vertex data
-   glVertexAttribPointer ( 0, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
-   glEnableVertexAttribArray ( 0 );
+   glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, vVertices );
 
    glDrawArrays ( GL_TRIANGLES, 0, 3 );
+
+   glDisableVertexAttribArray(positionSlot);
 }
 
 
