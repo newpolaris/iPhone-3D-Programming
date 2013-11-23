@@ -1,24 +1,19 @@
-// Physical orientation of a handheld device, equivalent to UIDeviceOrientation
-enum DeviceOrientation {
-    DeviceOrientationUnknown,
-    DeviceOrientationPortrait,
-    DeviceOrientationPortraitUpsideDown,
-    DeviceOrientationLandscapeLeft,
-    DeviceOrientationLandscapeRight,
-    DeviceOrientationFaceUp,
-    DeviceOrientationFaceDown,
-};
+#include "esUtil.h"
 
-// Create renderer object, inistalize OpenGL Status
-struct IRenderingEngine* CreateRenderer1();
-struct IRenderingEngine* CreateRenderer2();
-struct IRenderingEngine* RenderingEngine();
+typedef struct
+{
+   // Handle to a program object
+   GLuint programObject;
+
+} UserData;
 
 // OpenGL ES Renderer interface. Used by GLView class
 struct IRenderingEngine {
-	virtual void Initialize(int width, int height) = 0;
-	virtual void Render() const = 0;
-	virtual void UpdateAnimation(float timeStep) = 0;
-	virtual void OnRotate(DeviceOrientation newOrientation) = 0;
+	virtual int Initialize(ESContext*) = 0;
+	virtual void Render(ESContext*) const = 0;
 	virtual ~IRenderingEngine() {}
 };
+
+// Create renderer object, inistalize OpenGL Status
+struct IRenderingEngine* RenderingEngine();
+

@@ -5,6 +5,7 @@
 *.lastbuildstate
 *.idb
 *.ipch
-.sdf
-
 *.sdf
+*.swp
+*.swo
+debug.txt
