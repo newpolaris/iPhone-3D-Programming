@@ -49,11 +49,11 @@ struct Vertex {
 
 const Vertex Vertices[] = {
     {{-0.5, -0.866},        {1, 1, 0.5f, 1}},
-    {{0.5, -0.866},                {1, 1, 0.5f, 1}},
-    {{0, 1},                        {1, 1, 0.5f, 1}},
+    {{0.5, -0.866},         {1, 1, 0.5f, 1}},
+    {{0, 1},                {1, 1, 0.5f, 1}},
     {{-0.5, -0.866},        {0.5f, 0.5f, 0.5f}},
-    {{0.5, -0.866},                {0.5f, 0.5f, 0.5f}},
-    {{0, -0.4f},                {0.5f, 0.5f, 0.5f}}
+    {{0.5, -0.866},         {0.5f, 0.5f, 0.5f}},
+    {{0, -0.4f},            {0.5f, 0.5f, 0.5f}}
 };
 
 RenderingEngine2::RenderingEngine2() 
@@ -104,10 +104,15 @@ void RenderingEngine2::Render() const
 
    glEnableVertexAttribArray(positionSlot);
 
-   // Load the vertex data
-   glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, vVertices );
+   GLsizei stride = sizeof(Vertex);
+   const GLvoid* pCoords = &Vertices[0].Position[0];
 
-   glDrawArrays ( GL_TRIANGLES, 0, 3 );
+   // Load the vertex data
+   glVertexAttribPointer (positionSlot, 2, GL_FLOAT, GL_FALSE, stride, pCoords);
+
+   GLsizei vertexCount = sizeof(Vertices) / sizeof(Vertex);
+
+   glDrawArrays ( GL_TRIANGLES, 0, vertexCount);
 
    glDisableVertexAttribArray(positionSlot);
 }
