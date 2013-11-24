@@ -82,9 +82,9 @@ int RenderingEngine2::Initialize(int width, int height)
 	// Set the viewport
 	glViewport ( 0, 0, mWidth, mHeight );
 
-	// glUseProgram(m_simpleProgram);
+	glUseProgram(m_simpleProgram);
 
-	// ApplyOrtho(2, 3);
+	ApplyOrtho(2, 3);
 
 	glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
 
@@ -123,7 +123,7 @@ void RenderingEngine2::ApplyRotation(float degrees) const
 	};
 
 	GLint modelviewUniform = glGetUniformLocation(m_simpleProgram,
-												 "ModelView");
+												 "Modelview");
 
 	glUniformMatrix4fv(modelviewUniform, 1, 0, &zRotation[0]);
 }
@@ -131,10 +131,10 @@ void RenderingEngine2::ApplyRotation(float degrees) const
 void RenderingEngine2::Render() const
 {
 	// Clear the color buffer
-	// glClearColor(0.5f, 0.5f, 0.5f, 1);
+	glClearColor(0.5f, 0.5f, 0.5f, 1);
 	glClear ( GL_COLOR_BUFFER_BIT );
 
-	// ApplyRotation(25);
+	ApplyRotation(0);
 
 	GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
 	GLuint colorSlot = glGetAttribLocation(m_simpleProgram, "SourceColor");
