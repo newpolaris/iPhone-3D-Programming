@@ -32,7 +32,7 @@ int main ( int argc, char *argv[] )
    esInitContext ( &esContext );
    esContext.userData = &userData;
 
-   esCreateWindow ( &esContext, TEXT("Hello Triangle"), 320, 240, ES_WINDOW_RGB );
+   esCreateWindow ( &esContext, TEXT("Hello Triangle"), 640, 480, ES_WINDOW_RGB );
    
    if (!RenderingEngine()->Initialize(esContext.width, esContext.height))
       return 0;
