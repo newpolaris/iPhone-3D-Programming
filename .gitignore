@@ -11,3 +11,7 @@
 *.unsuccessfulbuild
 *.o
 debug.txt
+/HelloTriangle/Debug
+/HelloTriangle/libEGL.dll
+/HelloTriangle/libGLESv2.dll
+/Debug
