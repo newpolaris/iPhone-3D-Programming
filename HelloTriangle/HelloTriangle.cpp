@@ -20,6 +20,10 @@
 
 void Draw (ESContext* esContext)
 {
+    static float step = 0.0;
+    step+=0.0002;
+
+    RenderingEngine()->UpdateAnimation(step);
     RenderingEngine()->Render();
 	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
@@ -39,6 +43,8 @@ int main ( int argc, char *argv[] )
 
    esRegisterDrawFunc ( &esContext, Draw );
    
+   RenderingEngine()->OnRotate(DeviceOrientationFaceUp);
+
    esMainLoop ( &esContext );
 }
 

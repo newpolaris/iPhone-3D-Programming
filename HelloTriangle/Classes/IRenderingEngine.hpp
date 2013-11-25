@@ -21,6 +21,8 @@ enum DeviceOrientation {
 struct IRenderingEngine {
 	virtual int Initialize(int width, int height) = 0;
 	virtual void Render() const = 0;
+    virtual void UpdateAnimation(float timeStep) = 0;
+    virtual void OnRotate(DeviceOrientation orientation) = 0;
 	virtual ~IRenderingEngine() {}
 };
 

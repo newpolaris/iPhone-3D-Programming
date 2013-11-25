@@ -16,7 +16,7 @@
 
 using namespace std;
 
-static const float RevolutionsPerSecond = 0.25f;
+static const float AnimationDuration = 0.25f;
 
 struct Vertex {
     vec3 Position;
@@ -27,7 +27,7 @@ struct Animation {
     Quaternion Start;
     Quaternion End;
     Quaternion Current;
-    float Elaped;
+    float Elapsed;
     float Duration;
 };
 
@@ -154,6 +154,56 @@ int RenderingEngine2::Initialize(int width, int height)
     glUniformMatrix4fv(projectionUniform, 1, 0, projectionMatrix.Pointer());
 
 	return TRUE;
+}
+
+void RenderingEngine2::UpdateAnimation(float timeStep)
+{
+    if (m_animation.Current == m_animation.End)
+        return;
+    
+    m_animation.Elapsed += timeStep;
+    if (m_animation.Elapsed >= AnimationDuration) {
+        m_animation.Current = m_animation.End;
+    } else {
+        float mu = m_animation.Elapsed / AnimationDuration;
+        m_animation.Current = m_animation.Start.Slerp(mu, m_animation.End);
+    }
+}
+
+void RenderingEngine2::OnRotate(DeviceOrientation orientation)
+{
+    vec3 direction;
+    
+    switch (orientation) {
+        case DeviceOrientationUnknown:
+        case DeviceOrientationPortrait:
+            direction = vec3(0, 1, 0);
+            break;
+            
+        case DeviceOrientationPortraitUpsideDown:
+            direction = vec3(0, -1, 0);
+            break;
+            
+        case DeviceOrientationFaceDown:       
+            direction = vec3(0, 0, -1);
+            break;
+            
+        case DeviceOrientationFaceUp:
+            direction = vec3(0, 0, 1);
+            break;
+            
+        case DeviceOrientationLandscapeLeft:
+            direction = vec3(+1, 0, 0);
+            break;
+            
+        case DeviceOrientationLandscapeRight:
+            direction = vec3(-1, 0, 0);
+            break;
+    }
+    
+    m_animation.Elapsed = 0;
+    m_animation.Start = m_animation.Current = m_animation.End;
+    m_animation.End = Quaternion::CreateFromVectors(vec3(0, 1, 0), direction);
 }
 
 void RenderingEngine2::ApplyOrtho(float maxX, float maxY) const
