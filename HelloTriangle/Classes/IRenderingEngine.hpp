@@ -7,6 +7,16 @@ typedef struct
 
 } UserData;
 
+// Physical orientation of a handheld device; equivalent to UIDeviceOrientation
+enum DeviceOrientation {
+    DeviceOrientationUnknown,
+    DeviceOrientationPortrait,
+    DeviceOrientationPortraitUpsideDown,
+    DeviceOrientationLandscapeLeft,
+    DeviceOrientationLandscapeRight,
+    DeviceOrientationFaceUp,
+    DeviceOrientationFaceDown,
+};
 // OpenGL ES Renderer interface. Used by GLView class
 struct IRenderingEngine {
 	virtual int Initialize(int width, int height) = 0;

@@ -1,32 +1,43 @@
-/*
- *  RenderingEngine2.cpp
- *  HelloArrow
- *
- *  Created by Kristof Vannotten on 2/10/10.
- *  Copyright 2010 Kristof Projects. All rights reserved.
- *
- */
-
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <cmath>
 #include <iostream>
 #include <stdlib.h>
+#include <vector>
+
 #include "IRenderingEngine.hpp"
+#include "Quaternion.hpp"
+#include "Vector.hpp"
 
 #define STRINGIFY(A) #A
 
 #include "../Shaders/Simple.vert"
 #include "../Shaders/Simple.frag"
 
+using namespace std;
 
-static const float RevolutionPerSecond = 1;
+static const float RevolutionsPerSecond = 0.25f;
+
+struct Vertex {
+    vec3 Position;
+    vec4 Color;
+};
+
+struct Animation {
+    Quaternion Start;
+    Quaternion End;
+    Quaternion Current;
+    float Elaped;
+    float Duration;
+};
 
 class RenderingEngine2: public IRenderingEngine {
 public:
     RenderingEngine2();
     int Initialize(int width, int height);
     void Render() const;
+    void UpdateAnimation(float timeStep);
+    void OnRotate(DeviceOrientation newOrientation);
 
 private:
 	GLuint BuildProgram(const char* vertexShaderSource, const char* fragmentShaderSource) const;
@@ -36,7 +47,14 @@ private:
 	void ApplyRotation(float degrees) const;
 	void ApplyOrtho(float maxX, float maxY) const;
 
+    vector<Vertex> m_cone;
+    vector<Vertex> m_disk;
+    Animation m_animation;
     GLuint m_simpleProgram;
+    GLuint m_framebuffer;
+    GLuint m_colorRenderbuffer;
+    GLuint m_depthRenderbuffer;
+
 	int mWidth;
 	int mHeight;
 };
@@ -46,24 +64,10 @@ IRenderingEngine* RenderingEngine() {
     return &engine;
 }
 
-struct Vertex {
-    float Position[2];
-    float Color[4];
-};
-
-const Vertex Vertices[] = {
-    {{-0.5f, -0.866},        {1, 1, 0.5f, 1}},
-    {{0.5f, -0.866},         {1, 1, 0.5f, 1}},
-    {{0, 1},                {1, 1, 0.5f, 1}},
-    {{-0.5f, -0.866},        {0.5f, 0.5f, 0.5f}},
-    {{0.5f, -0.866},         {0.5f, 0.5f, 0.5f}},
-    {{0, -0.4f},            {0.5f, 0.5f, 0.5f}}
-};
-
 RenderingEngine2::RenderingEngine2() 
 {
-    // glGenRenderbuffers(1, &m_renderbuffer);
-    // glBindRenderbuffer(GL_RENDERBUFFER, m_renderbuffer);
+	// glGenRenderbuffers(1, &m_colorRenderbuffer);
+    // glBindRenderbuffer(GL_RENDERBUFFER, m_colorRenderbuffer);
 }
 
 int RenderingEngine2::Initialize(int width, int height) 
@@ -71,22 +75,83 @@ int RenderingEngine2::Initialize(int width, int height)
 	mWidth = width;
 	mHeight = height;
 
-	// create framebuffer object and attach the colour buffer
+    const float coneRadius = 0.5f;
+    const float coneHeight = 1.866f;
+    const int coneSlices = 40;
+
+    // Initialize thie vertices of the triangle strip.
+	{
+		m_cone.resize((coneSlices+1)*2);
+
+		vector<Vertex>::iterator vertex = m_cone.begin();
+		const float dtheta = TwoPi / coneSlices;
+
+		for (float theta = 0; vertex != m_cone.end(); theta += dtheta) {
+			// grayscale gradient
+			float brightness = abs(sin(theta));
+
+			vec4 color(brightness, brightness, brightness, 1);
+
+			// Apex vertex
+			vertex->Position = vec3(0, 1, 0);
+			vertex->Color = color;
+			vertex++;
+
+			vertex->Position.x = coneRadius * cos(theta);
+			vertex->Position.y = 1 - coneHeight;
+			vertex->Position.z = coneRadius * sin(theta);
+			vertex->Color = color;
+			vertex++;
+		}
+	}
+
+    // Allocate space for the disk vertices.
+	{
+		m_disk.resize(coneSlices + 2);
+
+		// Initialize the center vertex of the triangle fan.
+		vector<Vertex>::iterator vertex = m_disk.begin();
+		vertex->Color = vec4(0.75, 0.75, 0.75, 1);
+		vertex->Position.x = 0;
+		vertex->Position.y = 1- coneHeight;
+		vertex->Position.z = 0;
+		vertex++;
+
+		// Initialize the rim vertices of the triangle fan.
+		const float dtheta = TwoPi / coneSlices;
+		for (float theta = 0; vertex != m_disk.end(); theta += dtheta) {
+			vertex->Color = vec4(0.75, 0.75, 0.75, 1);
+			vertex->Position.x = coneRadius * cos(theta);
+			vertex->Position.y = 1 - coneHeight;
+			vertex->Position.z = coneRadius * sin(theta);
+			vertex++;
+		}
+	}
+
+	// Create framebuffer object; attach the depth and colour buffers.
 	// glGenFramebuffers(1, &m_framebuffer);
 	// glBindFramebuffer(GL_FRAMEBUFFER, m_framebuffer);
-	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_renderbuffer);
+	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+    //                          GL_COLOR_ATTACHMENT0,
+    //                           GL_RENDERBUFFER,
+    //                           m_colorRenderbuffer);
+	// glFramebufferRenderbuffer(GL_FRAMEBUFFER, 
+    //                           GL_DEPTH_ATTACHMENT,
+    //                           GL_RENDERBUFFER,
+    //                           m_depthRenderbuffer);
 
-	// Load the vertex/fragment shaders
-	m_simpleProgram = BuildProgram(SimpleVertexShader, SimpleFragmentShader );
+    // Set up some GL state.
+    glViewport(0, 0, width, height);
+    glEnable(GL_DEPTH_TEST);
 
-	// Set the viewport
-	glViewport ( 0, 0, mWidth, mHeight );
-
+	// Build the GLSL program.
+	m_simpleProgram = BuildProgram( SimpleVertexShader, SimpleFragmentShader );
 	glUseProgram(m_simpleProgram);
 
-	ApplyOrtho(2, 3);
-
-	glClearColor ( 0.0f, 0.0f, 0.0f, 0.0f );
+    // Set the projection matrix.
+    GLint projectionUniform = glGetUniformLocation(m_simpleProgram, "Projection");
+    mat4 projectionMatrix = mat4::Frustum(-1.6f, 1.6f, -2.4, 2.4, 5, 10);
+    glUniformMatrix4fv(projectionUniform, 1, 0, projectionMatrix.Pointer());
 
 	return TRUE;
 }
@@ -130,29 +195,45 @@ void RenderingEngine2::ApplyRotation(float degrees) const
 
 void RenderingEngine2::Render() const
 {
-	// Clear the color buffer
-	glClearColor(0.5f, 0.5f, 0.5f, 1);
-	glClear ( GL_COLOR_BUFFER_BIT );
-
-	ApplyRotation(0);
-
 	GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
 	GLuint colorSlot = glGetAttribLocation(m_simpleProgram, "SourceColor");
+
+	// Clear the color buffer
+	glClearColor(0.5f, 0.5f, 0.5f, 1);
+	glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	glEnableVertexAttribArray(positionSlot);
 	glEnableVertexAttribArray(colorSlot);
 
-	GLsizei stride = sizeof(Vertex);
-	const GLvoid* pCoords = &Vertices[0].Position[0];
-	const GLvoid* pColors = &Vertices[0].Color[0];
+    mat4 rotation(m_animation.Current.ToMatrix());
+    mat4 translation = mat4::Translate(0, 0, -7);
 
-	// Load the vertex data
-	glVertexAttribPointer (positionSlot, 2, GL_FLOAT, GL_FALSE, stride, pCoords);
-	glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
+    // Set the model-view matrix.
+    GLint modelviewUniform = glGetUniformLocation(m_simpleProgram, "Modelview");
 
-	GLsizei vertexCount = sizeof(Vertices) / sizeof(Vertex);
+    mat4 modelviewMatrix = rotation * translation;
+    glUniformMatrix4fv(modelviewUniform, 1, 0, modelviewMatrix.Pointer());
 
-	glDrawArrays ( GL_TRIANGLES, 0, vertexCount);
+    // Draw the cone.
+    {
+        GLsizei stride = sizeof(Vertex);
+        const GLvoid* pCoords = &m_cone[0].Position.x;
+        const GLvoid* pColors = &m_cone[0].Color.x;
+        glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, stride, pCoords);
+        glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, m_cone.size());
+    }
+
+    // Draw the disk that caps off the base of the cone.
+    {
+        GLsizei stride = sizeof(Vertex);
+        const GLvoid* pCoords = &m_disk[0].Position.x;
+        const GLvoid* pColors = &m_disk[0].Color.x;
+
+        glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, stride, pCoords);
+        glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
+        glDrawArrays(GL_TRIANGLE_FAN, 0, m_disk.size());
+    }
 
 	glDisableVertexAttribArray(positionSlot);
 	glDisableVertexAttribArray(colorSlot);

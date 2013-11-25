@@ -107,6 +107,9 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Classes\IRenderingEngine.hpp" />
+    <ClInclude Include="Classes\Matrix.hpp" />
+    <ClInclude Include="Classes\Quaternion.hpp" />
+    <ClInclude Include="Classes\Vector.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

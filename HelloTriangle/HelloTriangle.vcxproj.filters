@@ -21,5 +21,14 @@
     <ClInclude Include="Classes\IRenderingEngine.hpp">
       <Filter>소스 파일\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Classes\Matrix.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\Quaternion.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\Vector.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
