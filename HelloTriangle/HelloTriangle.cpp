@@ -20,10 +20,6 @@
 
 void Draw (ESContext* esContext)
 {
-    static float step = 0.0;
-    step+=0.0002;
-
-    RenderingEngine()->UpdateAnimation(step);
     RenderingEngine()->Render();
 	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
@@ -31,13 +27,11 @@ void Draw (ESContext* esContext)
 void touchesBegin (ESContext* esContext, int x, int y)
 {
     RenderingEngine()->OnFingerDown(ivec2(x, y));
-    esLogMessage("B %d, %d\n", x, y);
 }
 
 void touchesEnded (ESContext* esContext, int x, int y)
 {
     RenderingEngine()->OnFingerUp(ivec2(x, y));
-    esLogMessage("E %d, %d\n", x, y);
 }
 
 /// \param: px, py previous touch point.
@@ -45,7 +39,6 @@ void touchesEnded (ESContext* esContext, int x, int y)
 void touchesMoved(ESContext* esContext, int px, int py, int nx, int ny)
 {
     RenderingEngine()->OnFingerMove(ivec2(px, py), ivec2(nx, ny));
-    esLogMessage("M %d, %d\n", nx, ny);
 }
 
 int main ( int argc, char *argv[] )

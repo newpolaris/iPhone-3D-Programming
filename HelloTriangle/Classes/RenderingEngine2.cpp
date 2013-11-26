@@ -36,11 +36,11 @@ public:
     RenderingEngine2();
     int Initialize(int width, int height);
     void Render() const;
-    void UpdateAnimation(float timeStep);
-    void OnRotate(DeviceOrientation newOrientation);
-    void OnFingerUp(ivec2 location) {}
-    void OnFingerDown(ivec2 location) {}
-    void OnFingerMove(ivec2 oldLocation, ivec2 newLocation) {}
+    void UpdateAnimation(float timeStep) {}
+    void OnRotate(DeviceOrientation newOrientation) {}
+    void OnFingerUp(ivec2 location);
+    void OnFingerDown(ivec2 location);
+    void OnFingerMove(ivec2 oldLocation, ivec2 newLocation);
 
 private:
 	GLuint BuildProgram(const char* vertexShaderSource, const char* fragmentShaderSource) const;
@@ -52,7 +52,10 @@ private:
 
     vector<Vertex> m_cone;
     vector<Vertex> m_disk;
-    Animation m_animation;
+    GLfloat m_rotationAngle;
+    GLfloat m_scale;
+    ivec2 m_pivotPoint;
+
     GLuint m_simpleProgram;
     GLuint m_framebuffer;
     GLuint m_colorRenderbuffer;
@@ -68,6 +71,7 @@ IRenderingEngine* RenderingEngine() {
 }
 
 RenderingEngine2::RenderingEngine2() 
+    : m_rotationAngle(0), m_scale(1)
 {
 	// glGenRenderbuffers(1, &m_colorRenderbuffer);
     // glBindRenderbuffer(GL_RENDERBUFFER, m_colorRenderbuffer);
@@ -77,6 +81,8 @@ int RenderingEngine2::Initialize(int width, int height)
 {
 	mWidth = width;
 	mHeight = height;
+
+    m_pivotPoint = ivec2(width / 2, height / 2);
 
     const float coneRadius = 0.5f;
     const float coneHeight = 1.866f;
@@ -159,54 +165,27 @@ int RenderingEngine2::Initialize(int width, int height)
 	return TRUE;
 }
 
-void RenderingEngine2::UpdateAnimation(float timeStep)
+void RenderingEngine2::OnFingerUp(ivec2 location)
 {
-    if (m_animation.Current == m_animation.End)
-        return;
-    
-    m_animation.Elapsed += timeStep;
-    if (m_animation.Elapsed >= AnimationDuration) {
-        m_animation.Current = m_animation.End;
-    } else {
-        float mu = m_animation.Elapsed / AnimationDuration;
-        m_animation.Current = m_animation.Start.Slerp(mu, m_animation.End);
-    }
+    m_scale = 1.0f;
 }
 
-void RenderingEngine2::OnRotate(DeviceOrientation orientation)
+void RenderingEngine2::OnFingerDown(ivec2 location)
 {
-    vec3 direction;
-    
-    switch (orientation) {
-        case DeviceOrientationUnknown:
-        case DeviceOrientationPortrait:
-            direction = vec3(0, 1, 0);
-            break;
-            
-        case DeviceOrientationPortraitUpsideDown:
-            direction = vec3(0, -1, 0);
-            break;
-            
-        case DeviceOrientationFaceDown:       
-            direction = vec3(0, 0, -1);
-            break;
-            
-        case DeviceOrientationFaceUp:
-            direction = vec3(0, 0, 1);
-            break;
-            
-        case DeviceOrientationLandscapeLeft:
-            direction = vec3(+1, 0, 0);
-            break;
-            
-        case DeviceOrientationLandscapeRight:
-            direction = vec3(-1, 0, 0);
-            break;
-    }
-    
-    m_animation.Elapsed = 0;
-    m_animation.Start = m_animation.Current = m_animation.End;
-    m_animation.End = Quaternion::CreateFromVectors(vec3(0, 1, 0), direction);
+    m_scale = 1.5f;
+    OnFingerMove(location, location);
+}
+
+void RenderingEngine2::OnFingerMove(ivec2 previou, ivec2 location)
+{
+    vec2 direction = vec2(location - m_pivotPoint).Normalized();
+
+    // 필셀 좌표는 아래로 갈수록 커지므로, y축 값의 부호를 바꾼다.
+    direction.y = -direction.y;
+
+    m_rotationAngle = std::acos(direction.y) * 180.0f / 3.14159f;
+    if (direction.x > 0)
+        m_rotationAngle = -m_rotationAngle;
 }
 
 void RenderingEngine2::ApplyOrtho(float maxX, float maxY) const
@@ -258,13 +237,14 @@ void RenderingEngine2::Render() const
 	glEnableVertexAttribArray(positionSlot);
 	glEnableVertexAttribArray(colorSlot);
 
-    mat4 rotation(m_animation.Current.ToMatrix());
+    mat4 rotation = mat4::Rotate(m_rotationAngle);
+    mat4 scale = mat4::Scale(m_scale);
     mat4 translation = mat4::Translate(0, 0, -7);
 
     // Set the model-view matrix.
     GLint modelviewUniform = glGetUniformLocation(m_simpleProgram, "Modelview");
 
-    mat4 modelviewMatrix = rotation * translation;
+    mat4 modelviewMatrix = scale * rotation * translation;
     glUniformMatrix4fv(modelviewUniform, 1, 0, modelviewMatrix.Pointer());
 
     // Draw the cone.
