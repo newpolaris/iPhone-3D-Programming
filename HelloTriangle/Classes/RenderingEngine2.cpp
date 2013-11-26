@@ -50,16 +50,18 @@ private:
 	void ApplyRotation(float degrees) const;
 	void ApplyOrtho(float maxX, float maxY) const;
 
-    vector<Vertex> m_cone;
-    vector<Vertex> m_disk;
+    vector<Vertex> m_coneVertices;
+    vector<GLubyte> m_coneIndices;
+    GLuint m_bodyIndexCount;
+    GLuint m_diskIndexCount;
     GLfloat m_rotationAngle;
     GLfloat m_scale;
     ivec2 m_pivotPoint;
 
     GLuint m_simpleProgram;
-    GLuint m_framebuffer;
-    GLuint m_colorRenderbuffer;
-    GLuint m_depthRenderbuffer;
+    // GLuint m_framebuffer;
+    // GLuint m_colorRenderbuffer;
+    // GLuint m_depthRenderbuffer;
 
 	int mWidth;
 	int mHeight;
@@ -86,55 +88,61 @@ int RenderingEngine2::Initialize(int width, int height)
 
     const float coneRadius = 0.5f;
     const float coneHeight = 1.866f;
-    const int coneSlices = 40;
+    const int coneSlices = 80;
+    const float dtheta = TwoPi / coneSlices;
 
-    // Initialize thie vertices of the triangle strip.
-	{
-		m_cone.resize((coneSlices+1)*2);
+    // 꼭대기 점점을 각각 다른 색으로 지정하기 위해
+    // Apex vertices: n (for each set different color)
+    // bottom disk boundary: n
+    // center of disk: 1
+    const int vertexCount = coneSlices * 2 + 1;
 
-		vector<Vertex>::iterator vertex = m_cone.begin();
-		const float dtheta = TwoPi / coneSlices;
+    m_coneVertices.resize(vertexCount);
 
-		for (float theta = 0; vertex != m_cone.end(); theta += dtheta) {
-			// grayscale gradient
-			float brightness = abs(sin(theta));
+    vector<Vertex>::iterator vertex = m_coneVertices.begin();
 
-			vec4 color(brightness, brightness, brightness, 1);
+    for (float theta = 0; vertex != m_coneVertices.end() - 1 ; theta += dtheta) {
+        // grayscale gradient
+        float brightness = abs(sin(theta));
 
-			// Apex vertex
-			vertex->Position = vec3(0, 1, 0);
-			vertex->Color = color;
-			vertex++;
+        vec4 color(brightness, brightness, brightness, 1);
 
-			vertex->Position.x = coneRadius * cos(theta);
-			vertex->Position.y = 1 - coneHeight;
-			vertex->Position.z = coneRadius * sin(theta);
-			vertex->Color = color;
-			vertex++;
-		}
-	}
+        // Apex vertex
+        vertex->Position = vec3(0, 1, 0);
+        vertex->Color = color;
+        vertex++;
 
-    // Allocate space for the disk vertices.
-	{
-		m_disk.resize(coneSlices + 2);
+        vertex->Position.x = coneRadius * cos(theta);
+        vertex->Position.y = 1 - coneHeight;
+        vertex->Position.z = coneRadius * sin(theta);
+        vertex->Color = color;
+        vertex++;
+    }
 
-		// Initialize the center vertex of the triangle fan.
-		vector<Vertex>::iterator vertex = m_disk.begin();
-		vertex->Color = vec4(0.75, 0.75, 0.75, 1);
-		vertex->Position.x = 0;
-		vertex->Position.y = 1- coneHeight;
-		vertex->Position.z = 0;
-		vertex++;
+    // center of disk
+    vertex->Position = vec3(0, 1 - coneHeight, 0);
+    vertex->Color = vec4(1, 1, 1, 1);
 
-		// Initialize the rim vertices of the triangle fan.
-		const float dtheta = TwoPi / coneSlices;
-		for (float theta = 0; vertex != m_disk.end(); theta += dtheta) {
-			vertex->Color = vec4(0.75, 0.75, 0.75, 1);
-			vertex->Position.x = coneRadius * cos(theta);
-			vertex->Position.y = 1 - coneHeight;
-			vertex->Position.z = coneRadius * sin(theta);
-			vertex++;
-		}
+    m_bodyIndexCount = coneSlices * 3;
+	m_diskIndexCount = coneSlices * 3;
+
+    m_coneIndices.resize(m_bodyIndexCount + m_diskIndexCount);
+    vector<GLubyte>::iterator index = m_coneIndices.begin();
+
+    // Body Triangles.
+    for (int i = 0; i < coneSlices * 2; i+= 2) {
+        *index++ = i;
+        *index++ = (i + 1) % (2 * coneSlices); 
+        *index++ = (i + 3) % (2 * coneSlices);
+    }
+
+	// Bottom triangles.
+	const int diskCenterIndex = vertexCount - 1;
+
+	for (int i = 1; i < coneSlices * 2 + 1; i += 2) {
+		*index++ = diskCenterIndex;
+		*index++ = i;
+		*index++ = (i + 2) % (2 * coneSlices);
 	}
 
 	// Create framebuffer object; attach the depth and colour buffers.
@@ -230,13 +238,6 @@ void RenderingEngine2::Render() const
 	GLuint positionSlot = glGetAttribLocation(m_simpleProgram, "vPosition");
 	GLuint colorSlot = glGetAttribLocation(m_simpleProgram, "SourceColor");
 
-	// Clear the color buffer
-	glClearColor(0.5f, 0.5f, 0.5f, 1);
-	glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-	glEnableVertexAttribArray(positionSlot);
-	glEnableVertexAttribArray(colorSlot);
-
     mat4 rotation = mat4::Rotate(m_rotationAngle);
     mat4 scale = mat4::Scale(m_scale);
     mat4 translation = mat4::Translate(0, 0, -7);
@@ -245,31 +246,32 @@ void RenderingEngine2::Render() const
     GLint modelviewUniform = glGetUniformLocation(m_simpleProgram, "Modelview");
 
     mat4 modelviewMatrix = scale * rotation * translation;
+
+	GLsizei stride = sizeof(Vertex);
+	const GLvoid* pCoords = &m_coneVertices[0].Position.x;
+	const GLvoid* pColors = &m_coneVertices[0].Color.x;
+
+	// Clear the color buffer
+	glClearColor(0.5f, 0.5f, 0.5f, 1);
+	glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
     glUniformMatrix4fv(modelviewUniform, 1, 0, modelviewMatrix.Pointer());
+	glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, stride, pCoords);
+	glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
 
-    // Draw the cone.
-    {
-        GLsizei stride = sizeof(Vertex);
-        const GLvoid* pCoords = &m_cone[0].Position.x;
-        const GLvoid* pColors = &m_cone[0].Color.x;
-        glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, stride, pCoords);
-        glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, m_cone.size());
-    }
+	glEnableVertexAttribArray(positionSlot);
+	glEnableVertexAttribArray(colorSlot);
 
-    // Draw the disk that caps off the base of the cone.
-    {
-        GLsizei stride = sizeof(Vertex);
-        const GLvoid* pCoords = &m_disk[0].Position.x;
-        const GLvoid* pColors = &m_disk[0].Color.x;
+	const GLvoid* bodyIndices = &m_coneIndices[0];
+	const GLvoid* diskIndices = &m_coneIndices[m_bodyIndexCount];
 
-        glVertexAttribPointer(positionSlot, 3, GL_FLOAT, GL_FALSE, stride, pCoords);
-        glVertexAttribPointer(colorSlot, 4, GL_FLOAT, GL_FALSE, stride, pColors);
-        glDrawArrays(GL_TRIANGLE_FAN, 0, m_disk.size());
-    }
+	glDrawElements(GL_TRIANGLES, m_bodyIndexCount, GL_UNSIGNED_BYTE, bodyIndices);
+
+	glDisableVertexAttribArray(colorSlot);
+	glVertexAttrib4f(colorSlot, 1, 1, 1, 1);
+	glDrawElements(GL_TRIANGLES, m_diskIndexCount, GL_UNSIGNED_BYTE, diskIndices);
 
 	glDisableVertexAttribArray(positionSlot);
-	glDisableVertexAttribArray(colorSlot);
 }
 
 
