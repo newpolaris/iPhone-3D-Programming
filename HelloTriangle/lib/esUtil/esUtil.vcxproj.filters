@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="소스 파일">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\Win32">
+      <UniqueIdentifier>{72b39673-01a1-4b61-8401-768738793a7f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="esShader.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="esShapes.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="esTransform.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="esUtil.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32\esUtil_TGA.c">
+      <Filter>소스 파일\Win32</Filter>
+    </ClCompile>
+    <ClCompile Include="Win32\esUtil_win32.c">
+      <Filter>소스 파일\Win32</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="esUtil.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="esUtil_win.h">
+      <Filter>소스 파일</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

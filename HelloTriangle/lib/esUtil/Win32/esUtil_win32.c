@@ -18,6 +18,7 @@
 //
 
 #include <windows.h>
+#include <windowsx.h>
 #include "esUtil.h"
 
 //////////////////////////////////////////////////////////////////
@@ -33,6 +34,8 @@
 //
 LRESULT WINAPI ESWindowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam ) 
 {
+   static POINT mousePoint;
+
    LRESULT  lRet = 1; 
 
    switch (uMsg) 
@@ -65,7 +68,51 @@ LRESULT WINAPI ESWindowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
       case WM_DESTROY:
          PostQuitMessage(0);             
          break; 
-      
+
+      case WM_LBUTTONDOWN:
+         {
+            ESContext *esContext = (ESContext*)(LONG_PTR) GetWindowLongPtr ( hWnd, GWL_USERDATA );
+
+			mousePoint.x = GET_X_LPARAM(lParam);
+			mousePoint.y = GET_Y_LPARAM(lParam);
+
+            if ( esContext && esContext->lButtomDownFunc )
+                esContext->lButtomDownFunc ( esContext, (int) mousePoint.x, (int) mousePoint.y );
+         }
+         break;
+
+      case WM_LBUTTONUP:
+         {
+            POINT      point;
+            ESContext *esContext = (ESContext*)(LONG_PTR) GetWindowLongPtr ( hWnd, GWL_USERDATA );
+
+			point.x = GET_X_LPARAM(lParam);
+			point.y = GET_Y_LPARAM(lParam);
+
+            if ( esContext && esContext->lButtomUpFunc )
+                esContext->lButtomUpFunc ( esContext, (int) point.x, (int) point.y );
+         }
+         break;
+
+      case WM_MOUSEMOVE:
+         {
+            POINT      point;
+
+            ESContext *esContext = (ESContext*)(LONG_PTR) GetWindowLongPtr ( hWnd, GWL_USERDATA );
+
+			point.x = GET_X_LPARAM(lParam);
+			point.y = GET_Y_LPARAM(lParam);
+
+            if (wParam & MK_LBUTTON) // drag event
+                if ( esContext && esContext->mouseDragFunc )
+                    esContext->mouseDragFunc ( esContext, 
+                                               (int) mousePoint.x, (int) mousePoint.y,
+                                               (int) point.x, (int) point.y );
+
+            mousePoint = point; // point update
+         }
+         break;
+
       case WM_CHAR:
          {
             POINT      point;
@@ -76,7 +123,7 @@ LRESULT WINAPI ESWindowProc ( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
             if ( esContext && esContext->keyFunc )
 	            esContext->keyFunc ( esContext, (unsigned char) wParam, 
 		                             (int) point.x, (int) point.y );
-}
+         }
          break;
          
       default: 

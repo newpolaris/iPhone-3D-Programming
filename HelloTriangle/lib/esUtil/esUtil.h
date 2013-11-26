@@ -87,6 +87,9 @@ typedef struct
    void (ESCALLBACK *drawFunc) ( void* );
    void (ESCALLBACK *keyFunc) ( void*, unsigned char, int, int );
    void (ESCALLBACK *updateFunc) ( void*, float deltaTime );
+   void (ESCALLBACK *lButtomUpFunc) ( void*, int, int );
+   void (ESCALLBACK *lButtomDownFunc) ( void*, int, int );
+   void (ESCALLBACK *mouseDragFunc) ( void*, int, int, int, int );
 } ESContext;
 
 
@@ -155,6 +158,30 @@ void ESUTIL_API esRegisterDrawFunc ( ESContext *esContext, void (ESCALLBACK *dra
 /// \param updateFunc Update callback function that will be used to render the scene
 //
 void ESUTIL_API esRegisterUpdateFunc ( ESContext *esContext, void (ESCALLBACK *updateFunc) ( ESContext*, float ) );
+
+//
+/// \brief Register an mouse left buttom down event processing callback function
+/// \param esContext Application context
+/// \param lButtomDownFunc mouse left buttom down event callback function for application processing of mouse event input
+//
+void ESUTIL_API esRegisterLeftButtonDownFunc( ESContext* esContext,
+                                              void (ESCALLBACK* lButtomDownFunc) ( ESContext*, int, int ) );
+
+//
+/// \brief Register an mouse left buttom up event processing callback function
+/// \param esContext Application context
+/// \param lButtomUpFunc mouse left buttom up event callback function for application processing of mouse event input
+//
+void ESUTIL_API esRegisterLeftButtonUpFunc( ESContext* esContext,
+                                            void (ESCALLBACK* lButtomUpFunc) ( ESContext*, int, int ) );
+
+//
+/// \brief Register an mouse drag event processing callback function
+/// \param esContext Application context
+/// \param mouseDragFunc mouse drag event callback function for application processing of mouse event. 
+//
+void ESUTIL_API esRegisterMouseDragFunc( ESContext* esContext,
+                                         void (ESCALLBACK* mouseDragFunc) ( ESContext*, int, int, int, int ) );
 
 //
 /// \brief Register an keyboard input processing callback function

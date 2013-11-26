@@ -242,6 +242,32 @@ void ESUTIL_API esRegisterUpdateFunc ( ESContext *esContext, void (ESCALLBACK *u
    esContext->updateFunc = updateFunc;
 }
 
+///
+//  esRegisterLeftButtonDownFunc()
+//
+void ESUTIL_API esRegisterLeftButtonDownFunc ( ESContext* esContext, 
+                                               void (ESCALLBACK* lButtomUpFunc) ( ESContext*, int, int ) )
+{
+    esContext->lButtomUpFunc = lButtomUpFunc;
+}
+
+///
+//  esRegisterLeftButtomUpFunc()
+//
+void ESUTIL_API esRegisterLeftButtonUpFunc ( ESContext* esContext,
+                                             void (ESCALLBACK* lButtomDownFunc) ( ESContext*, int, int ) )
+{
+    esContext->lButtomDownFunc = lButtomDownFunc;
+}
+
+///
+//  esRegisterMouseDragFunc()
+//
+void ESUTIL_API esRegisterMouseDragFunc ( ESContext* esContext,
+                                          void (ESCALLBACK* mouseDragFunc) ( ESContext*, int, int, int, int ) )
+{
+    esContext->mouseDragFunc = mouseDragFunc;
+}
 
 ///
 //  esRegisterKeyFunc()

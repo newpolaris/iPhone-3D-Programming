@@ -38,6 +38,9 @@ public:
     void Render() const;
     void UpdateAnimation(float timeStep);
     void OnRotate(DeviceOrientation newOrientation);
+    void OnFingerUp(ivec2 location) {}
+    void OnFingerDown(ivec2 location) {}
+    void OnFingerMove(ivec2 oldLocation, ivec2 newLocation) {}
 
 private:
 	GLuint BuildProgram(const char* vertexShaderSource, const char* fragmentShaderSource) const;

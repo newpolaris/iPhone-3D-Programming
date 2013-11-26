@@ -28,6 +28,26 @@ void Draw (ESContext* esContext)
 	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
 
+void touchesBegin (ESContext* esContext, int x, int y)
+{
+    RenderingEngine()->OnFingerDown(ivec2(x, y));
+    esLogMessage("B %d, %d\n", x, y);
+}
+
+void touchesEnded (ESContext* esContext, int x, int y)
+{
+    RenderingEngine()->OnFingerUp(ivec2(x, y));
+    esLogMessage("E %d, %d\n", x, y);
+}
+
+/// \param: px, py previous touch point.
+/// \param: nx, ny next(current) touch point.
+void touchesMoved(ESContext* esContext, int px, int py, int nx, int ny)
+{
+    RenderingEngine()->OnFingerMove(ivec2(px, py), ivec2(nx, ny));
+    esLogMessage("M %d, %d\n", nx, ny);
+}
+
 int main ( int argc, char *argv[] )
 {
    ESContext esContext;
@@ -42,6 +62,9 @@ int main ( int argc, char *argv[] )
       return 0;
 
    esRegisterDrawFunc ( &esContext, Draw );
+   esRegisterLeftButtonDownFunc( &esContext, touchesBegin );
+   esRegisterLeftButtonUpFunc( &esContext, touchesEnded );
+   esRegisterMouseDragFunc( &esContext, touchesMoved );
    
    RenderingEngine()->OnRotate(DeviceOrientationFaceUp);
 
