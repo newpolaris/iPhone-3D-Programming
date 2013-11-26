@@ -71,7 +71,7 @@
     <ClInclude Include="esUtil_win.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{4B8B5EC5-5DB3-4065-A313-95F21F5DC4B4}</ProjectGuid>
+    <ProjectGuid>{2565D03E-3B4C-442B-AE17-D912AC11710F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>esUtil</RootNamespace>
   </PropertyGroup>
