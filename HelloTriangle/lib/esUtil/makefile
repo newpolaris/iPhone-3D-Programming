@@ -1,6 +1,6 @@
 CC = gcc
 
-OPENGLES_INCLUDE = -I../include -I.
+OPENGLES_INCLUDE = -I../../include -I.
 OPENGLES_LINBRARY = -L../lib/Debug
 
 CFLAGS:= $(OPENGLES_INCLUDE)
@@ -17,6 +17,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	ar cr $(TARGET) $^
+	cp $(TARGET) ../Debug/
 
 clean:
 	rm -f $(OBJECTS) $(TARGET)

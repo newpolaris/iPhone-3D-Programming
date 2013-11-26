@@ -1,7 +1,7 @@
 CC = g++
 
-OPENGLES_INCLUDE = -I./include -I./include/esUtil
-OPENGLES_LINBRARY = -L./lib/ -L./lib/Debug
+OPENGLES_INCLUDE = -I./include -I./lib/esUtil
+OPENGLES_LINBRARY = -L./lib/Debug
 
 CFLAGS:= $(OPENGLES_INCLUDE) -g -O0
 LDFLAGS:= $(OPENGLES_LINBRARY) -lesUtil -lEGL -lGLESv2 -mwindows
