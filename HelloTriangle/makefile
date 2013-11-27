@@ -6,14 +6,17 @@ OPENGLES_LINBRARY = -L./lib/Debug
 CFLAGS:= $(OPENGLES_INCLUDE) -g -O0
 LDFLAGS:= $(OPENGLES_LINBRARY) -lesUtil -lEGL -lGLESv2 -mwindows
 
-SOURCES=HelloTriangle.cpp Classes\RenderingEngine2.cpp
+SOURCES=HelloTriangle.cpp \
+		Classes\ApplicationEngine.cpp \
+		Classes\RenderingEngine.ES2.cpp \
+
 OBJECTS=$(SOURCES:.cpp=.o) 
 OUT=-o HelloTriangle
 
 .cpp.o:
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) -c -o $@
 
-all: HelloTriangle.cpp Classes\RenderingEngine2.o
+all: HelloTriangle.cpp Classes\RenderingEngine.ES2.o Classes\ApplicationEngine.o
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(OUT)
 	cp ./lib/Debug/libEGL.dll .
 	cp ./lib/Debug/libGLESv2.dll .
@@ -21,4 +24,6 @@ all: HelloTriangle.cpp Classes\RenderingEngine2.o
 clean:
 	rm HelloTriangle.exe Classes\RenderingEngine2.o libEGL.dll libGLESv2.dll
 
-Classes\RenderingEngine2.o: Classes\RenderingEngine2.cpp Shaders/Simple.frag Shaders/Simple.vert
+Classes\RenderingEngine.ES2.o: Classes\RenderingEngine.ES2.cpp Shaders/Simple.frag Shaders/Simple.vert
+	$(CC) $^ $(CFLAGS) $(LDFLAGS) -c -o $@
+
