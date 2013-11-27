@@ -1,4 +1,5 @@
 #include "Interfaces.hpp"
+#include "ParametricSurface.hpp"
 
 void ParametricSurface::SetInterval(const ParametricInterval& interval)
 {
@@ -28,10 +29,12 @@ void ParametricSurface::GenerateVertices(vector<float>& vertices) const
     vertices.resize(GetVertexCount() * 3);
     vec3* position = (vec3*)&vertices[0];
 
-    for (int j = 0; i < m_divisions.x; i++) {
-        vec2 domain = ComputeDomain(i, j);
-        vec3 range = Evaluate(domain);
-        *position++ = range;
+    for (int j = 0; j < m_divisions.y; j++) {
+		for (int i = 0; i < m_divisions.x; i++) {
+			vec2 domain = ComputeDomain(i, j);
+			vec3 range = Evaluate(domain);
+			*position++ = range;
+		}
     }
 }
 

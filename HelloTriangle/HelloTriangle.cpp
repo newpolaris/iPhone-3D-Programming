@@ -16,51 +16,47 @@
 //    OpenGL ES 2.0 rendering.
 #include <stdlib.h>
 #include "esUtil.h"
-#include "Classes/IRenderingEngine.hpp"
+#include "Classes/Vector.hpp"
+#include "Classes/Interfaces.hpp"
 
 void Draw (ESContext* esContext)
 {
-    RenderingEngine()->Render();
+	AppEngineInstance()->Render();
 	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
 
 void touchesBegin (ESContext* esContext, int x, int y)
 {
-    RenderingEngine()->OnFingerDown(ivec2(x, y));
+	AppEngineInstance()->OnFingerDown(ivec2(x, y));
 }
 
 void touchesEnded (ESContext* esContext, int x, int y)
 {
-    RenderingEngine()->OnFingerUp(ivec2(x, y));
+	AppEngineInstance()->OnFingerUp(ivec2(x, y));
 }
 
 /// \param: px, py previous touch point.
 /// \param: nx, ny next(current) touch point.
 void touchesMoved(ESContext* esContext, int px, int py, int nx, int ny)
 {
-    RenderingEngine()->OnFingerMove(ivec2(px, py), ivec2(nx, ny));
+	AppEngineInstance()->OnFingerMove(ivec2(px, py), ivec2(nx, ny));
 }
 
 int main ( int argc, char *argv[] )
 {
    ESContext esContext;
-   UserData  userData;
 
    esInitContext ( &esContext );
-   esContext.userData = &userData;
 
    esCreateWindow ( &esContext, TEXT("Hello Triangle"), 640, 480, ES_WINDOW_RGB );
    
-   if (!RenderingEngine()->Initialize(esContext.width, esContext.height))
-      return 0;
+   AppEngineInstance()->Initialize(esContext.width, esContext.height);
 
    esRegisterDrawFunc ( &esContext, Draw );
    esRegisterLeftButtonDownFunc( &esContext, touchesBegin );
    esRegisterLeftButtonUpFunc( &esContext, touchesEnded );
    esRegisterMouseDragFunc( &esContext, touchesMoved );
    
-   RenderingEngine()->OnRotate(DeviceOrientationFaceUp);
-
    esMainLoop ( &esContext );
 }
 

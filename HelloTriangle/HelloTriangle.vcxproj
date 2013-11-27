@@ -99,7 +99,9 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Classes\RenderingEngine2.cpp" />
+    <ClCompile Include="Classes\ApplicationEngine.cpp" />
+    <ClCompile Include="Classes\ParametricSurface.cpp" />
+    <ClCompile Include="Classes\RenderingEngine.ES2.cpp" />
     <ClCompile Include="HelloTriangle.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">include;include\esUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -107,10 +109,16 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Classes\IRenderingEngine.hpp" />
+    <ClInclude Include="Classes\Interfaces.hpp" />
     <ClInclude Include="Classes\Matrix.hpp" />
+    <ClInclude Include="Classes\ParametricEquations.hpp" />
+    <ClInclude Include="Classes\ParametricSurface.hpp" />
     <ClInclude Include="Classes\Quaternion.hpp" />
     <ClInclude Include="Classes\Vector.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Simple.frag" />
+    <None Include="Shaders\Simple.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

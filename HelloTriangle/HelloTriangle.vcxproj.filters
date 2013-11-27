@@ -13,14 +13,17 @@
     <ClCompile Include="HelloTriangle.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Classes\RenderingEngine2.cpp">
+    <ClCompile Include="Classes\ApplicationEngine.cpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\ParametricSurface.cpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="Classes\RenderingEngine.ES2.cpp">
       <Filter>소스 파일\Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Classes\IRenderingEngine.hpp">
-      <Filter>소스 파일\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="Classes\Matrix.hpp">
       <Filter>소스 파일\Classes</Filter>
     </ClInclude>
@@ -30,5 +33,22 @@
     <ClInclude Include="Classes\Vector.hpp">
       <Filter>소스 파일\Classes</Filter>
     </ClInclude>
+    <ClInclude Include="Classes\Interfaces.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\ParametricEquations.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="Classes\ParametricSurface.hpp">
+      <Filter>소스 파일\Classes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\Simple.frag">
+      <Filter>소스 파일</Filter>
+    </None>
+    <None Include="Shaders\Simple.vert">
+      <Filter>소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

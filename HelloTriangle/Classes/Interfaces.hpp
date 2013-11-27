@@ -36,7 +36,7 @@ struct IRenderingEngine {
     virtual ~IRenderingEngine() {}
 };
 
-IApplicationEngine* CreateApplicationEngine(IRenderingEngine* renderingEngine);
+IApplicationEngine* AppEngineInstance();
 namespace ES1 { IRenderingEngine* CreateRenderingEngine(); }
 namespace ES2 { IRenderingEngine* CreateRenderingEngine(); }
 
