@@ -124,10 +124,10 @@ void ApplicationEngine::Render() const
 		float t = m_animation.Elapsed / m_animation.Duration;
 		for (int i = 0; i < SurfaceCount; i++) {
 			const Visual& start = m_animation.StartingVisuals[i];
-			const Visual& end= m_animation.EndingVisuals[i];
+			const Visual& end = m_animation.EndingVisuals[i];
 			Visual& tweened = visuals[i];
 
-			tweened.Color = start.Color.Lerp(1, end.Color);
+			tweened.Color = start.Color.Lerp(t, end.Color);
 			tweened.LowerLeft = start.LowerLeft.Lerp(t, end.LowerLeft);
 			tweened.ViewportSize = start.ViewportSize.Lerp(t, end.
 															ViewportSize);
