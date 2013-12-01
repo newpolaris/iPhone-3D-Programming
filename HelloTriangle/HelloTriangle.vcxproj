@@ -13,7 +13,8 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2B6729E4-2AA7-45AA-93D6-1EE85E5E9F7D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>HelloTriangle</RootNamespace>
+    <RootNamespace>ModelViewer</RootNamespace>
+    <ProjectName>ModelViewer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

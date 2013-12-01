@@ -31,6 +31,7 @@ private:
     GLint m_modelviewUniform;
     GLuint m_positionSlot;
     GLuint m_colorSlot;
+	GLuint m_depthRenderbuffer;
     mat4 m_translation;
 };
 
@@ -81,6 +82,17 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
         m_drawables.push_back(drawable);
     }
     
+	// 색상 버퍼에서 넓이와 높이를 추출한다.
+	int width, height;
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);
+	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_HEIGHT, &height);
+
+	// 색상 버퍼와 같은 크기의 깊이 버퍼를 생성한다.
+	glGenRenderbuffers(1, &m_depthRenderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderbuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
+
+	glEnable(GL_DEPTH_TEST);
     // Create the framebuffer object.
     // GLuint framebuffer;
     // glGenFramebuffers(1, &framebuffer);
@@ -105,7 +117,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
 void RenderingEngine::Render(const vector<Visual>& visuals) const
 {
     glClearColor(0.5f, 0.5f, 0.5f, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
     vector<Visual>::const_iterator visual = visuals.begin();
     for (int visualIndex = 0; visual != visuals.end(); ++visual, ++visualIndex) {
