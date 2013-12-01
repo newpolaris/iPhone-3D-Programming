@@ -8,6 +8,14 @@ using namespace std;
 static const int SurfaceCount = 6;
 static const int ButtonCount = SurfaceCount - 1;
 
+struct Animation {
+	bool Active;
+	float Elapsed;
+	float Duration;
+	Visual StartingVisuals[SurfaceCount];
+	Visual EndingVisuals[SurfaceCount];
+};
+
 class ApplicationEngine : public IApplicationEngine {
 public:
     ApplicationEngine(IRenderingEngine* renderingEngine);
@@ -35,6 +43,7 @@ private:
 	ivec2 m_buttonSize;
 	int m_pressedButton;
 	int m_buttonSurfaces[ButtonCount];
+	Animation m_animation;
 };
 
 IApplicationEngine* AppEngineInstance()
@@ -49,6 +58,8 @@ ApplicationEngine::ApplicationEngine(IRenderingEngine* renderingEngine) :
     m_renderingEngine(renderingEngine),
 	m_pressedButton(-1)
 {
+	m_animation.Active = false;
+
 	m_buttonSurfaces[0] = 0;
 	m_buttonSurfaces[1] = 1;
 	m_buttonSurfaces[2] = 2;
@@ -99,26 +110,58 @@ void ApplicationEngine::PopulateVisuals(Visual* visuals) const
 
 	visuals[m_currentSurface].Color = m_spinning ? vec3(1,1,1) : vec3(0,1,1);
 	visuals[m_currentSurface].LowerLeft = ivec2(0, 48);
+	visuals[m_currentSurface].ViewportSize = ivec2(320, 432);
 	visuals[m_currentSurface].Orientation = m_orientation;
 }
 
 void ApplicationEngine::Render() const
 {
 	vector<Visual> visuals(SurfaceCount);
-	PopulateVisuals(&visuals[0]);
+
+	if (!m_animation.Active) {
+		PopulateVisuals(&visuals[0]);
+	} else {
+		float t = m_animation.Elapsed / m_animation.Duration;
+		for (int i = 0; i < SurfaceCount; i++) {
+			const Visual& start = m_animation.StartingVisuals[i];
+			const Visual& end= m_animation.EndingVisuals[i];
+			Visual& tweened = visuals[i];
+
+			tweened.Color = start.Color.Lerp(1, end.Color);
+			tweened.LowerLeft = start.LowerLeft.Lerp(t, end.LowerLeft);
+			tweened.ViewportSize = start.ViewportSize.Lerp(t, end.
+															ViewportSize);
+			tweened.Orientation = start.Orientation.Slerp(t, end.Orientation);
+		}
+	}
+
     m_renderingEngine->Render(visuals);
 }
 
 void ApplicationEngine::UpdateAnimation(float dt)
 {
+	if (m_animation.Active) {
+		m_animation.Elapsed += dt;
+		if (m_animation.Elapsed > m_animation.Duration)
+			m_animation.Active = false;
+	}
 }
 
 void ApplicationEngine::OnFingerUp(ivec2 location)
 {
     m_spinning = false;
 
-	if (m_pressedButton != -1 && m_pressedButton == MapToButton(location))
+	if (m_pressedButton != -1 && m_pressedButton == MapToButton(location)
+		&& !m_animation.Active)
+	{
+		m_animation.Active = true;
+		m_animation.Elapsed = 0;
+		m_animation.Duration = 0.25f;
+
+		PopulateVisuals(&m_animation.StartingVisuals[0]);
 		swap(m_buttonSurfaces[m_pressedButton], m_currentSurface);
+		PopulateVisuals(&m_animation.EndingVisuals[0]);
+	}
 
 	m_pressedButton = -1;
 }
