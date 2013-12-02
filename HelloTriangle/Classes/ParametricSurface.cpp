@@ -18,6 +18,11 @@ int ParametricSurface::GetLineIndexCount() const
     return 4 * m_slices.x * m_slices.y;
 }
 
+int ParametricSurface::GetTriangleIndexCount() const
+{
+	return 6 * m_slices.x * m_slices.y;
+}
+
 vec2 ParametricSurface::ComputeDomain(float x, float y) const
 {
     return vec2(x * m_upperBound.x / m_slices.x,
@@ -44,13 +49,31 @@ void ParametricSurface::GenerateLineIndices(vector<unsigned short>& indices) con
     vector<unsigned short>::iterator index = indices.begin();
     for (int j = 0, vertex = 0; j < m_slices.y; j++) {
         for (int i = 0; i < m_slices.x; i++) {
-            int next = (i + 1) % m_divisions.x;
             *index++ = vertex + i;
-            *index++ = vertex + next;
+            *index++ = vertex + i+1;
             *index++ = vertex + i;
             *index++ = vertex + i + m_divisions.x;
         }
         vertex += m_divisions.x;
     }
+}
+
+void ParametricSurface::GenerateTriangleIndices(vector<unsigned short>& indices)
+																		const
+{
+	indices.resize(GetTriangleIndexCount());
+	vector<unsigned short>::iterator index = indices.begin();
+	for (int j = 0, vertex = 0; j < m_slices.y; j++) {
+		for (int i = 0; i < m_slices.x; i++) {
+			int next = (i + 1) % m_divisions.x;
+            *index++ = vertex + i;
+            *index++ = vertex + next;
+            *index++ = vertex + i + m_divisions.x;
+            *index++ = vertex + i + m_divisions.x;
+            *index++ = vertex + next;
+            *index++ = vertex + i;
+            *index++ = vertex + next + m_divisions.x;
+		}
+	}
 }
 

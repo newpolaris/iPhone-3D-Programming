@@ -18,8 +18,11 @@ struct IApplicationEngine {
 struct ISurface {
     virtual int GetVertexCount() const = 0;
     virtual int GetLineIndexCount() const = 0;
+	virtual int GetTriangleIndexCount() const = 0;
     virtual void GenerateVertices(vector<float>& vertices) const = 0;
     virtual void GenerateLineIndices(vector<unsigned short>& indices) const = 0;
+	virtual void 
+		GenerateTriangleIndices(vector<unsigned short>& indices) const = 0;
     virtual ~ISurface() {}
 };
 

@@ -9,8 +9,10 @@ class ParametricSurface : public ISurface {
 public:
     int GetVertexCount() const;
     int GetLineIndexCount() const;
+	int GetTriangleIndexCount() const;
     void GenerateVertices(vector<float>& vertices) const;
     void GenerateLineIndices(vector<unsigned short>& indices) const;
+	void GenerateTriangleIndices(vector<unsigned short>& indices) const;
 
 protected:
     void SetInterval(const ParametricInterval& interval);

@@ -156,7 +156,7 @@ void ApplicationEngine::OnFingerUp(ivec2 location)
 	{
 		m_animation.Active = true;
 		m_animation.Elapsed = 0;
-		m_animation.Duration = 0.25f;
+		m_animation.Duration = 1.0f;
 
 		PopulateVisuals(&m_animation.StartingVisuals[0]);
 		swap(m_buttonSurfaces[m_pressedButton], m_currentSurface);

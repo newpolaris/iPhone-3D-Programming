@@ -19,9 +19,13 @@
 #include "Classes/Vector.hpp"
 #include "Classes/Interfaces.hpp"
 
+void Update(ESContext* esContext, float time)
+{
+	AppEngineInstance()->UpdateAnimation(time);
+}
+
 void Draw (ESContext* esContext)
 {
-	AppEngineInstance()->UpdateAnimation(0.01f);
 	AppEngineInstance()->Render();
 	eglSwapBuffers ( esContext->eglDisplay, esContext->eglSurface );
 }
@@ -54,6 +58,7 @@ int main ( int argc, char *argv[] )
    AppEngineInstance()->Initialize(esContext.width, esContext.height);
 
    esRegisterDrawFunc ( &esContext, Draw );
+   esRegisterUpdateFunc( &esContext, Update );
    esRegisterLeftButtonDownFunc( &esContext, touchesBegin );
    esRegisterLeftButtonUpFunc( &esContext, touchesEnded );
    esRegisterMouseDragFunc( &esContext, touchesMoved );
