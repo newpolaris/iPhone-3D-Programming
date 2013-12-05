@@ -69,11 +69,11 @@ void ParametricSurface::GenerateTriangleIndices(vector<unsigned short>& indices)
             *index++ = vertex + i;
             *index++ = vertex + next;
             *index++ = vertex + i + m_divisions.x;
-            *index++ = vertex + i + m_divisions.x;
             *index++ = vertex + next;
-            *index++ = vertex + i;
             *index++ = vertex + next + m_divisions.x;
+            *index++ = vertex + i + m_divisions.x;
 		}
+		vertex += m_divisions.x;
 	}
 }
 

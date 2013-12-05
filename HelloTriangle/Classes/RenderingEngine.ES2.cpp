@@ -63,13 +63,13 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
                      GL_STATIC_DRAW);
         
         // Create a new VBO for the indices if needed.
-        int indexCount = (*surface)->GetLineIndexCount();
+        int indexCount = (*surface)->GetTriangleIndexCount();
         GLuint indexBuffer;
         if (!m_drawables.empty() && indexCount == m_drawables[0].IndexCount) {
             indexBuffer = m_drawables[0].IndexBuffer;
         } else {
             vector<GLushort> indices(indexCount);
-            (*surface)->GenerateLineIndices(indices);
+            (*surface)->GenerateTriangleIndices(indices);
             glGenBuffers(1, &indexBuffer);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -147,7 +147,7 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
         glVertexAttribPointer(m_positionSlot, 3, GL_FLOAT, GL_FALSE, stride, 0);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.IndexBuffer);
-        glDrawElements(GL_LINES, drawable.IndexCount, GL_UNSIGNED_SHORT, 0);
+		glDrawElements(GL_TRIANGLES, drawable.IndexCount, GL_UNSIGNED_SHORT, 0);
     }
 }
 
