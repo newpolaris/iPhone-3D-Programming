@@ -15,11 +15,16 @@ struct IApplicationEngine {
     virtual ~IApplicationEngine() {}
 };
 
+enum VertexFlags {
+    VertexFlagsNormals = 1 << 0,
+    VertexFlagsTexCoords = 1 << 1,
+};
+
 struct ISurface {
     virtual int GetVertexCount() const = 0;
     virtual int GetLineIndexCount() const = 0;
 	virtual int GetTriangleIndexCount() const = 0;
-    virtual void GenerateVertices(vector<float>& vertices) const = 0;
+    virtual void GenerateVertices(vector<float>& vertices, unsigned char flags = 0) const = 0;
     virtual void GenerateLineIndices(vector<unsigned short>& indices) const = 0;
 	virtual void 
 		GenerateTriangleIndices(vector<unsigned short>& indices) const = 0;

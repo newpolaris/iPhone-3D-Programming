@@ -129,7 +129,7 @@ public:
     {
         float u = domain.x;
         float t = domain.y;
-        float major = 1.25;
+        float major = 1.25f;
         float a = 0.125f;
         float b = 0.5f;
         float phi = u / 2;
@@ -159,7 +159,7 @@ public:
     }
     vec3 Evaluate(const vec2& domain) const
     {
-        float v = 1 - domain.x;
+        float v = 1.f - domain.x;
         float u = domain.y;
         
         float x0 = 3 * cos(u) * (1 + sin(u)) +

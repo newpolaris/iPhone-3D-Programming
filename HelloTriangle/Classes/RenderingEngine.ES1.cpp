@@ -41,7 +41,7 @@ void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
 
         // 정점을 위한 VBO 객체를 생성한다.
         vector<float> vertices;
-        (*surface)->GenerateVertices(vertices);
+        (*surface)->GenerateVertices(vertices, VertexFlagsNormals);
         GLuint vertexBuffer;
         glGenBuffers(1, &vertexBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -82,13 +82,25 @@ void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
 
     // glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_colorRenderbuffer);
 
+    // 여러 GL상태를 설정한다.
     glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+
+    // 물체 속성을 설정한다.
+    vec4 specular(0.5f, 0.5f, 0.5f, 1);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular.Pointer());
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
+
     m_translation = mat4::Translate(0, 0, -7);
 }
     
 void RenderingEngine::Render(const vector<Visual>& visuals) const
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(0.5f, 0.5f, 0.5f, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
     vector<Visual>::const_iterator visual = visuals.begin();
     for (int visualIndex = 0;
@@ -99,6 +111,12 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         ivec2 size = visual->ViewportSize;
         ivec2 lowerLeft = visual->LowerLeft;
         glViewport(lowerLeft.x, lowerLeft.y, size.x, size.y);
+
+        // 조명 위치를 설정한다.
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        vec4 lightPosition(0.25, 0.25, 1, 0);
+        glLightfv(GL_LIGHT0, GL_POSITION, lightPosition.Pointer());
 
         // 모델-뷰 변환을 설정한다.
         mat4 rotation = visual->Orientation.ToMatrix();
