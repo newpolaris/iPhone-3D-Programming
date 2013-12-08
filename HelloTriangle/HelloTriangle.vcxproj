@@ -120,6 +120,7 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
   <ItemGroup>
     <None Include="Shaders\Simple.frag" />
     <None Include="Shaders\Simple.vert" />
+    <None Include="Shaders\SimpleLighting.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

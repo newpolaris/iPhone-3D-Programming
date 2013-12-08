@@ -8,8 +8,8 @@
 namespace ES2 {
 
 #define STRINGIFY(A)  #A
-#include "../Shaders/SimpleLighting.vert"
-#include "../Shaders/Simple.frag"
+#include "../Shaders/PixelLighting.vert"
+#include "../Shaders/PixelLighting.frag"
 
 struct AttributeHandle
 {
@@ -119,7 +119,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     // glBindRenderbuffer(GL_RENDERBUFFER, m_colorRenderbuffer);
     
     // Create the GLSL program.
-    GLuint program = BuildProgram(SimpleLightingVertexShader, SimpleFragmentShader);
+    GLuint program = BuildProgram(PixelLightingVertexShader, PixelLightingFragmentShader);
     glUseProgram(program);
     m_attribute.Position = glGetAttribLocation(program, "Position");
     m_attribute.Normal = glGetAttribLocation(program, "Normal");
