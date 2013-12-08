@@ -53,7 +53,7 @@ int main ( int argc, char *argv[] )
 
    esInitContext ( &esContext );
 
-   esCreateWindow ( &esContext, TEXT("Hello Triangle"), 320, 480, ES_WINDOW_RGB );
+   esCreateWindow ( &esContext, TEXT("Hello Triangle"), 320, 480, ES_WINDOW_RGB | ES_WINDOW_DEPTH );
    
    AppEngineInstance()->Initialize(esContext.width, esContext.height);
 

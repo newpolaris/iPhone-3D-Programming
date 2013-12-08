@@ -16,6 +16,7 @@ struct AttributeHandle
     GLuint Position;
     GLuint Normal;
     GLuint DiffuseMaterial;
+    GLuint AmbientMaterial;
 };
 
 struct UniformHandle
@@ -24,7 +25,6 @@ struct UniformHandle
     GLint Modelview;
     GLint NormalMatrix;
     GLint LightPosition;
-    GLint AmbientMaterial;
     GLint SpecularMaterial;
     GLint Shininess;
 };
@@ -110,7 +110,6 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
 	glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderbuffer);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
 
-	glEnable(GL_DEPTH_TEST);
     // Create the framebuffer object.
     // GLuint framebuffer;
     // glGenFramebuffers(1, &framebuffer);
@@ -125,26 +124,26 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_attribute.Position = glGetAttribLocation(program, "Position");
     m_attribute.Normal = glGetAttribLocation(program, "Normal");
     m_attribute.DiffuseMaterial = glGetAttribLocation(program, "DiffuseMaterial");
-
-    glEnableVertexAttribArray(m_attribute.Position);
-    glEnableVertexAttribArray(m_attribute.Normal);
-    // glEnableVertexAttribArray(m_attribute.DiffuseMaterial);
+    m_attribute.AmbientMaterial = glGetAttribLocation(program, "AmbientMaterial");
 
     // Set up some matrices.
     m_uniform.Projection = glGetUniformLocation(program, "Projection");
     m_uniform.Modelview = glGetUniformLocation(program, "Modelview");
     m_uniform.NormalMatrix = glGetUniformLocation(program, "NormalMatrix");
     m_uniform.LightPosition = glGetUniformLocation(program, "LightPosition");
-    m_uniform.AmbientMaterial = glGetUniformLocation(program, "AmbientMaterial");
     m_uniform.SpecularMaterial = glGetUniformLocation(program, "SpecularMaterial");
     m_uniform.Shininess = glGetUniformLocation(program, "Shininess");
 
+    glEnableVertexAttribArray(m_attribute.Position);
+    glEnableVertexAttribArray(m_attribute.Normal);
+	glEnable(GL_DEPTH_TEST);
+    // glEnableVertexAttribArray(m_attribute.DiffuseMaterial);
+
     // Set Light settings.
-    vec3 lightPosition(0.25, 0.25, 1);
-    glUniform3fv(m_uniform.LightPosition, 1, lightPosition.Pointer()); 
-    glUniform3f(m_uniform.AmbientMaterial, 0, 0, 0.5); // light blue 
-    glUniform3f(m_uniform.SpecularMaterial, 1, 1, 0); // orange
-    glUniform1f(m_uniform.Shininess, 1.5);
+    glVertexAttrib3f(m_attribute.AmbientMaterial, 0.04f, 0.04f, 0.04f); 
+    glUniform3f(m_uniform.LightPosition, 0.25, 0.25, 0.25);
+    glUniform3f(m_uniform.SpecularMaterial, 0.5, 0.5, 0.5);
+    glUniform1f(m_uniform.Shininess, 50);
 
     // set translation.
     m_translation = mat4::Translate(0, 0, -7);
@@ -152,7 +151,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
 
 void RenderingEngine::Render(const vector<Visual>& visuals) const
 {
-    glClearColor(0.5f, 0.5f, 0.5f, 1);
+    glClearColor(0.0, 0.125f, 0.25f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
     vector<Visual>::const_iterator visual = visuals.begin();
@@ -179,7 +178,7 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
 
         // Set the color.
-        vec3 color = visual->Color;
+        vec3 color = visual->Color * 0.75f;
         glVertexAttrib3f(m_attribute.DiffuseMaterial,
                          color.x, color.y, color.z);
         
