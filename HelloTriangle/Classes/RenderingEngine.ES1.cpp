@@ -14,7 +14,7 @@ struct Drawable {
 class RenderingEngine : public IRenderingEngine {
 public:
     RenderingEngine();
-    void Initalize(const vector<ISurface*>& surfaces);
+    void Initialize(const vector<ISurface*>& surfaces);
     void Render(const vector<Visual>& visuals) const;
 private:
     vector<Drawable> m_drawable;
@@ -33,13 +33,12 @@ RenderingEngine::RenderingEngine()
     // glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_colorRenderbuffer);
 }
 
-void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
+void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
 {
     vector<ISurface*>::const_iterator surface;
     for (surface = surfaces.begin();
          surface != surfaces.end(); ++surface) {
-
-        // ì •ì ì„ ìœ„í•œ VBO ê°ì²´ë¥¼ ìƒì„±í•œë‹¤.
+        // Create the VBO for the vertices.
         vector<float> vertices;
         (*surface)->GenerateVertices(vertices, VertexFlagsNormals);
         GLuint vertexBuffer;
@@ -50,7 +49,7 @@ void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
                      &vertices[0],
                      GL_STATIC_DRAW);
 
-        // í•„ìš”í•œ ê²½ìš° ì¸ë±ìŠ¤ë¥¼ ìœ„í•œ ìƒˆë¡œìš´ VBOë¥¼ ìƒì„±í•œë‹¤.
+        // Create a new VBO for the indices if needed.
         int indexCount = (*surface)->GetLineIndexCount();
         GLint indexBuffer;
         if (!m_drawable.empty() &&
@@ -71,7 +70,7 @@ void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
         m_drawables.push_back(drawable);
     }
 
-    // í”„ë ˆì„ ë²„í¼ ê°ì²´ë¥¼ ìƒì„±í•œë‹¤.
+    // ÇÁ·¹ÀÓ ¹öÆÛ °´Ã¼¸¦ »ı¼ºÇÑ´Ù.
     // GLuint framebuffer;
     // glGenFramebuffersOES(1, &framebuffer);
     // glBindFramebufferOES(GL_FRAMEBUFFER_OES, framebuffer);
@@ -82,14 +81,14 @@ void RenderingEngine::Initalize(const vector<ISurface*>& surfaces)
 
     // glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_colorRenderbuffer);
 
-    // ì—¬ëŸ¬ GLìƒíƒœë¥¼ ì„¤ì •í•œë‹¤.
+    // ¿©·¯ GL»óÅÂ¸¦ ¼³Á¤ÇÑ´Ù.
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_DEPTH_TEST);
 
-    // ë¬¼ì²´ ì†ì„±ì„ ì„¤ì •í•œë‹¤.
+    // ¹°Ã¼ ¼Ó¼ºÀ» ¼³Á¤ÇÑ´Ù.
     vec4 specular(0.5f, 0.5f, 0.5f, 1);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, specular.Pointer());
     glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 50.0f);
@@ -107,38 +106,40 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
          visual != visuals.end();
          ++visual, ++visualIndex)
     {
-        // ë·°í¬íŠ¸ ë³€í™˜ì„ ì„¤ì •í•œë‹¤.
+        // ºäÆ÷Æ® º¯È¯À» ¼³Á¤ÇÑ´Ù.
         ivec2 size = visual->ViewportSize;
         ivec2 lowerLeft = visual->LowerLeft;
         glViewport(lowerLeft.x, lowerLeft.y, size.x, size.y);
 
-        // ì¡°ëª… ìœ„ì¹˜ë¥¼ ì„¤ì •í•œë‹¤.
+        // Á¶¸í À§Ä¡¸¦ ¼³Á¤ÇÑ´Ù.
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
         vec4 lightPosition(0.25, 0.25, 1, 0);
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition.Pointer());
 
-        // ëª¨ë¸-ë·° ë³€í™˜ì„ ì„¤ì •í•œë‹¤.
+        // ¸ğµ¨-ºä º¯È¯À» ¼³Á¤ÇÑ´Ù.
         mat4 rotation = visual->Orientation.ToMatrix();
         mat4 modelview = rotation * m_traslation;
-        glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(modelview.Pointer());
 
-        // íˆ¬ìƒ í–‰ë ¬ì„ ì„¤ì •í•œë‹¤.
+        // Åõ»ó Çà·ÄÀ» ¼³Á¤ÇÑ´Ù.
         float h = 4.0f * size.y / size.x;
         mat4 projection = mat4::Frustum(-2, 2, -h/2, h/2, 5, 10);
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(projection.Pointer());
 
-        // ìƒ‰ìƒì„ ì„¤ì •í•œë‹¤.
-        vec3 color = visual->Color;
-        glColor4f(color.x, color.y, color.z, 1);
+        // È®»ê »ö»óÀ» ¼³Á¤ÇÑ´Ù.
+        vec3 color = visual->Color * 0.75f;
+        vec4 diffuse(color.x, color.y, color.z, 1);
+        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, diffuse.Pointer());
 
-        // ì™€ì´ì–´ í”„ë ˆì„ì„ ê·¸ë¦°ë‹¤.
-        int stride = sizeof(vec3);
+        // Ç¥¸éÀ» ±×¸°´Ù.
+        int stride = 2 * sizeof(vec3);
         const Drawable& drawalbe = m_drawables[visualIndex];
         glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
         glVertexPointer(3, GL_FLOAT, stride, 0);
+        const GLvoid* normalOffset = (const GLvoid*) sizeof(vec3);
+        glNormalPointer(GL_FLOAT, stride, normalOffset);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.IndexBuffer);
         glDrawElements(GL_LINES, drawable.IndexCount, GL_UNSIGNED_SHORT, 0);
     }

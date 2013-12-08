@@ -8,8 +8,26 @@
 namespace ES2 {
 
 #define STRINGIFY(A)  #A
-#include "../Shaders/Simple.vert"
+#include "../Shaders/SimpleLighting.vert"
 #include "../Shaders/Simple.frag"
+
+struct AttributeHandle
+{
+    GLuint Position;
+    GLuint Normal;
+    GLuint DiffuseMaterial;
+};
+
+struct UniformHandle
+{
+    GLint Projection;
+    GLint Modelview;
+    GLint NormalMatrix;
+    GLint LightPosition;
+    GLint AmbientMaterial;
+    GLint SpecularMaterial;
+    GLint Shininess;
+};
 
 struct Drawable {
     GLuint VertexBuffer;
@@ -27,10 +45,10 @@ private:
     GLuint BuildProgram(const char* vShader, const char* fShader) const;
     vector<Drawable> m_drawables;
     // GLuint m_colorRenderbuffer;
-    GLint m_projectionUniform;
-    GLint m_modelviewUniform;
-    GLuint m_positionSlot;
-    GLuint m_colorSlot;
+    
+    UniformHandle m_uniform;
+    AttributeHandle m_attribute;
+
 	GLuint m_depthRenderbuffer;
     mat4 m_translation;
 };
@@ -49,11 +67,11 @@ RenderingEngine::RenderingEngine()
 void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
 {
     vector<ISurface*>::const_iterator surface;
-    for (surface = surfaces.begin(); surface != surfaces.end(); ++surface) {
-        
+    for (surface = surfaces.begin(); 
+         surface != surfaces.end(); ++surface) {
         // Create the VBO for the vertices.
         vector<float> vertices;
-        (*surface)->GenerateVertices(vertices);
+        (*surface)->GenerateVertices(vertices, VertexFlagsNormals);
         GLuint vertexBuffer;
         glGenBuffers(1, &vertexBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
@@ -102,16 +120,34 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     // glBindRenderbuffer(GL_RENDERBUFFER, m_colorRenderbuffer);
     
     // Create the GLSL program.
-    GLuint simpleProgram = BuildProgram(SimpleVertexShader, SimpleFragmentShader);
-    glUseProgram(simpleProgram);
-    m_positionSlot = glGetAttribLocation(simpleProgram, "Position");
-    m_colorSlot = glGetAttribLocation(simpleProgram, "SourceColor");
-    glEnableVertexAttribArray(m_positionSlot);
+    GLuint program = BuildProgram(SimpleLightingVertexShader, SimpleFragmentShader);
+    glUseProgram(program);
+    m_attribute.Position = glGetAttribLocation(program, "Position");
+    m_attribute.Normal = glGetAttribLocation(program, "Normal");
+    m_attribute.DiffuseMaterial = glGetAttribLocation(program, "DiffuseMaterial");
+
+    glEnableVertexAttribArray(m_attribute.Position);
+    glEnableVertexAttribArray(m_attribute.Normal);
+    // glEnableVertexAttribArray(m_attribute.DiffuseMaterial);
 
     // Set up some matrices.
+    m_uniform.Projection = glGetUniformLocation(program, "Projection");
+    m_uniform.Modelview = glGetUniformLocation(program, "Modelview");
+    m_uniform.NormalMatrix = glGetUniformLocation(program, "NormalMatrix");
+    m_uniform.LightPosition = glGetUniformLocation(program, "LightPosition");
+    m_uniform.AmbientMaterial = glGetUniformLocation(program, "AmbientMaterial");
+    m_uniform.SpecularMaterial = glGetUniformLocation(program, "SpecularMaterial");
+    m_uniform.Shininess = glGetUniformLocation(program, "Shininess");
+
+    // Set Light settings.
+    vec3 lightPosition(0.25, 0.25, 1);
+    glUniform3fv(m_uniform.LightPosition, 1, lightPosition.Pointer()); 
+    glUniform3f(m_uniform.AmbientMaterial, 0, 0, 0.5); // light blue 
+    glUniform3f(m_uniform.SpecularMaterial, 1, 1, 0); // orange
+    glUniform1f(m_uniform.Shininess, 1.5);
+
+    // set translation.
     m_translation = mat4::Translate(0, 0, -7);
-    m_projectionUniform = glGetUniformLocation(simpleProgram, "Projection");
-    m_modelviewUniform = glGetUniformLocation(simpleProgram, "Modelview");
 }
 
 void RenderingEngine::Render(const vector<Visual>& visuals) const
@@ -130,22 +166,33 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         // Set the model-view transform.
         mat4 rotation = visual->Orientation.ToMatrix();
         mat4 modelview = rotation * m_translation;
-        glUniformMatrix4fv(m_modelviewUniform, 1, 0, modelview.Pointer());
+        glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
 
         // Set the projection transform.
         float h = 4.0f * size.y / size.x;
         mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
-        glUniformMatrix4fv(m_projectionUniform, 1, 0, projectionMatrix.Pointer());
+        glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
         
+        // Set the normal matrix
+		// It's orthogoal, so Its Inverse-Transpose matrix is itself!
+		mat3 normalMatrix = modelview.ToMat3();
+        glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
+
         // Set the color.
         vec3 color = visual->Color;
-        glVertexAttrib4f(m_colorSlot, color.x, color.y, color.z, 1);
+        glVertexAttrib3f(m_attribute.DiffuseMaterial,
+                         color.x, color.y, color.z);
         
         // Draw the wireframe.
-        int stride = sizeof(vec3);
+        int stride = 2*sizeof(vec3);
+        const GLvoid* offset = (const GLvoid*)sizeof(vec3);
         const Drawable& drawable = m_drawables[visualIndex];
         glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
-        glVertexAttribPointer(m_positionSlot, 3, GL_FLOAT, GL_FALSE, stride, 0);
+        glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
+                              GL_FALSE, stride, 0);
+        glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
+                              GL_FALSE, stride, offset);
+
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.IndexBuffer);
 		glDrawElements(GL_TRIANGLES, drawable.IndexCount, GL_UNSIGNED_SHORT, 0);
     }
@@ -171,7 +218,7 @@ GLuint RenderingEngine::BuildShader(const char* source, GLenum shaderType) const
 }
 
 GLuint RenderingEngine::BuildProgram(const char* vertexShaderSource,
-                                      const char* fragmentShaderSource) const
+                                     const char* fragmentShaderSource) const
 {
     GLuint vertexShader = BuildShader(vertexShaderSource, GL_VERTEX_SHADER);
     GLuint fragmentShader = BuildShader(fragmentShaderSource, GL_FRAGMENT_SHADER);

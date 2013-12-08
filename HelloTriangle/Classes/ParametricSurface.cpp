@@ -32,19 +32,20 @@ vec2 ParametricSurface::ComputeDomain(float x, float y) const
 void ParametricSurface::GenerateVertices(vector<float>& vertices,
                                          unsigned char flags) const
 {
-    // ì‚¼ê°í˜•ì„ ì €ì¥í•˜ê¸° ìœ„í•´ 3ë°°ìˆ˜ ë§Œí¼ ìš©ëŸ‰ì„ ëŠ˜ë¦°ë‹¤.
+    // »ï°¢ÇüÀ» ÀúÀåÇÏ±â À§ÇØ 3¹è¼ö ¸¸Å­ ¿ë·®À» ´Ã¸°´Ù.
     int floatsPerVertex = 3;
-    // ë§Œì•½ Normal vectorê°€ í•„ìš”í•˜ë‹¤ë©´ ì¶”ê°€ë¡œ 3 ë§Œí¼ì˜ ê³µê°„ì„ ë” ëŠ˜ë¦°ë‹¤.
+
+    // ¸¸¾à Normal vector°¡ ÇÊ¿äÇÏ´Ù¸é Ãß°¡·Î 3 ¸¸Å­ÀÇ °ø°£À» ´õ ´Ã¸°´Ù.
     if (flags & VertexFlagsNormals)
         floatsPerVertex += 3;
 
-    vertices.resize(GetVertexCount() * 3);
-    float* position = (float*)&vertices[0];
+    vertices.resize(GetVertexCount() * floatsPerVertex);
+    float* attribute = (float*)&vertices[0];
 
     for (int j = 0; j < m_divisions.y; j++) {
 		for (int i = 0; i < m_divisions.x; i++) {
 
-            // ìœ„ì¹˜ ê³„ì‚°
+            // À§Ä¡ °è»ê
 			vec2 domain = ComputeDomain(i, j);
 			vec3 range = Evaluate(domain);
             attribute = range.Write(attribute);
@@ -53,14 +54,14 @@ void ParametricSurface::GenerateVertices(vector<float>& vertices,
             if (flags & VertexFlagsNormals) {
                 float s = i, t = j;
 
-                // ë²•ì„ ì„ ê³„ì‚°í•  ìˆ˜ ì—†ëŠ” ê²½ìš°, ê°’ì„ ì•½ê°„ ì¦ê°€ì‹œí‚¨ë‹¤.
+                // ¹ı¼±À» °è»êÇÒ ¼ö ¾ø´Â °æ¿ì, °ªÀ» ¾à°£ Áõ°¡½ÃÅ²´Ù.
                 if (i == 0) s += 0.01f;
                 if (i == m_divisions.x - 1) s -= 0.01f;
                 if (j == 0) t += 0.01f;
                 if (j == m_divisions.y - 1) t -= 0.01f;
 
-                // ì ‘í‰ë©´ê³¼ ë²¡í„°ì˜ ì™¸ì ì„ ê³„ì‚°í•œë‹¤.
-                vec3 p = Evaluate(ComupteDomain(s, t));
+                // Á¢Æò¸é°ú º¤ÅÍÀÇ ¿ÜÀûÀ» °è»êÇÑ´Ù.
+                vec3 p = Evaluate(ComputeDomain(s, t));
                 vec3 u = Evaluate(ComputeDomain(s + 0.01f, t)) - p;
                 vec3 v = Evaluate(ComputeDomain(s, t + 0.01f)) - p;
 

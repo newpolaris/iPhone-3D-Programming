@@ -184,6 +184,13 @@ struct Matrix4 {
         m.w.x = 0; m.w.y = 0; m.w.z = f; m.w.w = 1;
         return m;
     }
+
+	Matrix4<T> inverse()
+	{
+		Matrix4 m = *this;
+		return m;
+	}
+
     vec4 x;
     vec4 y;
     vec4 z;
