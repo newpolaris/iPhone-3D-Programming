@@ -31,8 +31,10 @@ struct UniformHandle
 
 struct Drawable {
     GLuint VertexBuffer;
-    GLuint IndexBuffer;
-    int IndexCount;
+    GLuint TriangleIndexBuffer;
+    int TriangleIndexCount;
+	GLuint LineIndexBuffer;
+	int LineIndexCount;
 };
 
 class RenderingEngine : public IRenderingEngine {
@@ -69,6 +71,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     vector<ISurface*>::const_iterator surface;
     for (surface = surfaces.begin(); 
          surface != surfaces.end(); ++surface) {
+
         // Create the VBO for the vertices.
         vector<float> vertices;
         (*surface)->GenerateVertices(vertices, VertexFlagsNormals);
@@ -80,23 +83,46 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
                      &vertices[0],
                      GL_STATIC_DRAW);
         
-        // Create a new VBO for the indices if needed.
-        int indexCount = (*surface)->GetTriangleIndexCount();
-        GLuint indexBuffer;
-        if (!m_drawables.empty() && indexCount == m_drawables[0].IndexCount) {
-            indexBuffer = m_drawables[0].IndexBuffer;
+        // Create a new VBO for the trinagle indices if needed.
+        int TriangleIndexCount = (*surface)->GetTriangleIndexCount();
+        GLuint TriangleIndexBuffer;
+        if (!m_drawables.empty() 
+		 && TriangleIndexCount == m_drawables[0].TriangleIndexCount) {
+            TriangleIndexBuffer = m_drawables[0].TriangleIndexBuffer;
         } else {
-            vector<GLushort> indices(indexCount);
+            vector<GLushort> indices(TriangleIndexCount);
             (*surface)->GenerateTriangleIndices(indices);
-            glGenBuffers(1, &indexBuffer);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+            glGenBuffers(1, &TriangleIndexBuffer);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TriangleIndexBuffer);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         indexCount * sizeof(GLushort),
+                         TriangleIndexCount * sizeof(GLushort),
                          &indices[0],
                          GL_STATIC_DRAW);
         }
         
-        Drawable drawable = { vertexBuffer, indexBuffer, indexCount};
+        // Create a new VBO for the trinagle indices if needed.
+        int LineIndexCount = (*surface)->GetLineIndexCount();
+        GLuint LineIndexBuffer;
+        if (!m_drawables.empty() 
+		 && LineIndexCount == m_drawables[0].LineIndexCount) {
+            LineIndexBuffer = m_drawables[0].LineIndexBuffer;
+        } else {
+            vector<GLushort> indices(LineIndexCount);
+            (*surface)->GenerateLineIndices(indices);
+            glGenBuffers(1, &LineIndexBuffer);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, LineIndexBuffer);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                         LineIndexCount * sizeof(GLushort),
+                         &indices[0],
+                         GL_STATIC_DRAW);
+        }
+
+        Drawable drawable = { vertexBuffer,
+							  TriangleIndexBuffer,
+							  TriangleIndexCount,
+							  LineIndexBuffer,
+							  LineIndexCount };
+
         m_drawables.push_back(drawable);
     }
     
