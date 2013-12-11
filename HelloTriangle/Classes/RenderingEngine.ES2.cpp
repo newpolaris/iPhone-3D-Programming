@@ -8,8 +8,11 @@
 namespace ES2 {
 
 #define STRINGIFY(A)  #A
+
 #include "../Shaders/PixelLighting.vert"
-#include "../Shaders/ToonLighting.frag"
+#include "../Shaders/PixelLighting.frag"
+#include "../Shaders/Simple.vert"
+#include "../Shaders/Simple.frag"
 
 struct AttributeHandle
 {
@@ -17,6 +20,12 @@ struct AttributeHandle
     GLuint Normal;
     GLuint DiffuseMaterial;
     GLuint AmbientMaterial;
+};
+
+struct AttributeLineHandle
+{
+    GLuint Position;
+    GLuint Color;
 };
 
 struct UniformHandle
@@ -29,10 +38,18 @@ struct UniformHandle
     GLint Shininess;
 };
 
+struct UniformLineHandle
+{
+    GLint Projection;
+    GLint Modelview;
+};
+
 struct Drawable {
     GLuint VertexBuffer;
-    GLuint IndexBuffer;
-    int IndexCount;
+    GLuint TriangleIndexBuffer;
+    int TriangleIndexCount;
+	GLuint LineIndexBuffer;
+	int LineIndexCount;
 };
 
 class RenderingEngine : public IRenderingEngine {
@@ -45,12 +62,19 @@ private:
     GLuint BuildProgram(const char* vShader, const char* fShader) const;
     vector<Drawable> m_drawables;
     // GLuint m_colorRenderbuffer;
-    
+
     UniformHandle m_uniform;
     AttributeHandle m_attribute;
 
+    UniformLineHandle m_uniformLine;
+    AttributeLineHandle m_attributeLine;
+
+
 	GLuint m_depthRenderbuffer;
     mat4 m_translation;
+
+	GLuint m_triangle_program; 
+	GLuint m_line_program;
 };
 
 IRenderingEngine* CreateRenderingEngine()
@@ -69,6 +93,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     vector<ISurface*>::const_iterator surface;
     for (surface = surfaces.begin(); 
          surface != surfaces.end(); ++surface) {
+
         // Create the VBO for the vertices.
         vector<float> vertices;
         (*surface)->GenerateVertices(vertices, VertexFlagsNormals);
@@ -80,23 +105,46 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
                      &vertices[0],
                      GL_STATIC_DRAW);
         
-        // Create a new VBO for the indices if needed.
-        int indexCount = (*surface)->GetTriangleIndexCount();
-        GLuint indexBuffer;
-        if (!m_drawables.empty() && indexCount == m_drawables[0].IndexCount) {
-            indexBuffer = m_drawables[0].IndexBuffer;
+        // Create a new VBO for the trinagle indices if needed.
+        int TriangleIndexCount = (*surface)->GetTriangleIndexCount();
+        GLuint TriangleIndexBuffer;
+        if (!m_drawables.empty() 
+		 && TriangleIndexCount == m_drawables[0].TriangleIndexCount) {
+            TriangleIndexBuffer = m_drawables[0].TriangleIndexBuffer;
         } else {
-            vector<GLushort> indices(indexCount);
+            vector<GLushort> indices(TriangleIndexCount);
             (*surface)->GenerateTriangleIndices(indices);
-            glGenBuffers(1, &indexBuffer);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+            glGenBuffers(1, &TriangleIndexBuffer);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, TriangleIndexBuffer);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         indexCount * sizeof(GLushort),
+                         TriangleIndexCount * sizeof(GLushort),
                          &indices[0],
                          GL_STATIC_DRAW);
         }
         
-        Drawable drawable = { vertexBuffer, indexBuffer, indexCount};
+        // Create a new VBO for the trinagle indices if needed.
+        int LineIndexCount = (*surface)->GetLineIndexCount();
+        GLuint LineIndexBuffer;
+        if (!m_drawables.empty() 
+		 && LineIndexCount == m_drawables[0].LineIndexCount) {
+            LineIndexBuffer = m_drawables[0].LineIndexBuffer;
+        } else {
+            vector<GLushort> indices(LineIndexCount);
+            (*surface)->GenerateLineIndices(indices);
+            glGenBuffers(1, &LineIndexBuffer);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, LineIndexBuffer);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                         LineIndexCount * sizeof(GLushort),
+                         &indices[0],
+                         GL_STATIC_DRAW);
+        }
+
+        Drawable drawable = { vertexBuffer,
+							  TriangleIndexBuffer,
+							  TriangleIndexCount,
+							  LineIndexBuffer,
+							  LineIndexCount };
+
         m_drawables.push_back(drawable);
     }
     
@@ -119,8 +167,8 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     // glBindRenderbuffer(GL_RENDERBUFFER, m_colorRenderbuffer);
     
     // Create the GLSL program.
-    GLuint program = BuildProgram(PixelLightingVertexShader, ToonLightingFragmentShader);
-    glUseProgram(program);
+    GLuint program = 0;
+    program = BuildProgram(PixelLightingVertexShader, PixelLightingFragmentShader);
     m_attribute.Position = glGetAttribLocation(program, "Position");
     m_attribute.Normal = glGetAttribLocation(program, "Normal");
     m_attribute.DiffuseMaterial = glGetAttribLocation(program, "DiffuseMaterial");
@@ -133,17 +181,33 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_uniform.LightPosition = glGetUniformLocation(program, "LightPosition");
     m_uniform.SpecularMaterial = glGetUniformLocation(program, "SpecularMaterial");
     m_uniform.Shininess = glGetUniformLocation(program, "Shininess");
+	m_triangle_program = program;
+	glUseProgram(m_triangle_program);
 
     glEnableVertexAttribArray(m_attribute.Position);
     glEnableVertexAttribArray(m_attribute.Normal);
 	glEnable(GL_DEPTH_TEST);
-    // glEnableVertexAttribArray(m_attribute.DiffuseMaterial);
 
     // Set Light settings.
     glVertexAttrib3f(m_attribute.AmbientMaterial, 0.04f, 0.04f, 0.04f); 
     glUniform3f(m_uniform.LightPosition, 0.25, 0.25, 0.25);
     glUniform3f(m_uniform.SpecularMaterial, 0.5, 0.5, 0.5);
     glUniform1f(m_uniform.Shininess, 50);
+
+	/*
+    program = BuildProgram(SimpleVertexShader, SimpleFragmentShader);
+
+    // Set up some matries.
+    m_attributeLine.Position = glGetAttribLocation(program, "Position");
+    m_attributeLine.Color = glGetAttribLocation(program, "SourceColor");
+
+    m_uniformLine.Projection = glGetUniformLocation(program, "Projection");
+    m_uniformLine.Modelview = glGetUniformLocation(program, "Modelview");
+
+    // glEnableVertexAttribArray(m_attributeLine.Position);
+
+    m_line_program = program;
+	*/
 
     // set translation.
     m_translation = mat4::Translate(0, 0, -7);
@@ -186,14 +250,25 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         int stride = 2*sizeof(vec3);
         const GLvoid* offset = (const GLvoid*)sizeof(vec3);
         const Drawable& drawable = m_drawables[visualIndex];
+
         glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
         glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
                               GL_FALSE, stride, 0);
         glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
                               GL_FALSE, stride, offset);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.IndexBuffer);
-		glDrawElements(GL_TRIANGLES, drawable.IndexCount, GL_UNSIGNED_SHORT, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.TriangleIndexBuffer);
+		glDrawElements(GL_TRIANGLES, drawable.TriangleIndexBuffer, GL_UNSIGNED_SHORT, 0);
+
+		/*
+		glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
+		glVertexAttribPointer(m_attributeLinePosition, 2, GL_FLOAT,
+							  GL_FALSE, stride, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.LineIndexBuffer);
+		glUseProgram(m_line_program);
+		glDrawElements(GL_TRIANGLES, drawable.LineIndexBuffer, GL_UNSIGNED_SHORT, 0);
+		*/
     }
 }
 

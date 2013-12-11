@@ -1,4 +1,4 @@
-const char* ToonLightingFragmentShader = STRINGIFY(
+const char* PixelLightingFragmentShader = STRINGIFY(
 
 uniform highp vec3 LightPosition;
 uniform highp vec3 AmbientMaterial;
