@@ -147,6 +147,9 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
         m_drawables.push_back(drawable);
     }
     
+	glEnable(GL_DEPTH_TEST);
+	glPolygonOffset(4, 8);
+
 	// 색상 버퍼에서 넓이와 높이를 추출한다.
 	int width, height;
 	glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_WIDTH, &width);
@@ -181,8 +184,6 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_uniform.SpecularMaterial = glGetUniformLocation(program, "SpecularMaterial");
     m_uniform.Shininess = glGetUniformLocation(program, "Shininess");
 	m_triangle_program = program;
-
-	glEnable(GL_DEPTH_TEST);
 
 	glUseProgram(m_triangle_program);
 
@@ -237,6 +238,7 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
 		mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
 
 		{
+			glEnable(GL_POLYGON_OFFSET_FILL);
 			glUseProgram(m_triangle_program);
 			glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
 			glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
@@ -265,6 +267,7 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
 
 			glDisableVertexAttribArray(m_attribute.Position);
 			glDisableVertexAttribArray(m_attribute.Normal);
+			glDisable(GL_POLYGON_OFFSET_FILL);
 		}
 		{
 			glUseProgram(m_line_program);
