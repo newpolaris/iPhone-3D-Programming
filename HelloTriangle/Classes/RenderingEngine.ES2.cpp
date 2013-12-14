@@ -69,7 +69,6 @@ private:
     UniformLineHandle m_uniformLine;
     AttributeLineHandle m_attributeLine;
 
-
 	GLuint m_depthRenderbuffer;
     mat4 m_translation;
 
@@ -172,7 +171,7 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_attribute.Position = glGetAttribLocation(program, "Position");
     m_attribute.Normal = glGetAttribLocation(program, "Normal");
     m_attribute.DiffuseMaterial = glGetAttribLocation(program, "DiffuseMaterial");
-    m_attribute.AmbientMaterial = glGetAttribLocation(program, "AmbientMaterial");
+    m_attribute.AmbientMaterial = glGetUniformLocation(program, "AmbientMaterial");
 
     // Set up some matrices.
     m_uniform.Projection = glGetUniformLocation(program, "Projection");
@@ -182,11 +181,10 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_uniform.SpecularMaterial = glGetUniformLocation(program, "SpecularMaterial");
     m_uniform.Shininess = glGetUniformLocation(program, "Shininess");
 	m_triangle_program = program;
-	glUseProgram(m_triangle_program);
 
-    glEnableVertexAttribArray(m_attribute.Position);
-    glEnableVertexAttribArray(m_attribute.Normal);
 	glEnable(GL_DEPTH_TEST);
+
+	glUseProgram(m_triangle_program);
 
     // Set Light settings.
     glVertexAttrib3f(m_attribute.AmbientMaterial, 0.04f, 0.04f, 0.04f); 
@@ -194,7 +192,6 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     glUniform3f(m_uniform.SpecularMaterial, 0.5, 0.5, 0.5);
     glUniform1f(m_uniform.Shininess, 50);
 
-	/*
     program = BuildProgram(SimpleVertexShader, SimpleFragmentShader);
 
     // Set up some matries.
@@ -204,10 +201,11 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_uniformLine.Projection = glGetUniformLocation(program, "Projection");
     m_uniformLine.Modelview = glGetUniformLocation(program, "Modelview");
 
+	glUseProgram(program);
+
     // glEnableVertexAttribArray(m_attributeLine.Position);
 
     m_line_program = program;
-	*/
 
     // set translation.
     m_translation = mat4::Translate(0, 0, -7);
@@ -220,55 +218,70 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         
     vector<Visual>::const_iterator visual = visuals.begin();
     for (int visualIndex = 0; visual != visuals.end(); ++visual, ++visualIndex) {
-
         // Set the viewport transform.
         ivec2 size = visual->ViewportSize;
         ivec2 lowerLeft = visual->LowerLeft;
         glViewport(lowerLeft.x, lowerLeft.y, size.x, size.y);
 
-        // Set the model-view transform.
-        mat4 rotation = visual->Orientation.ToMatrix();
-        mat4 modelview = rotation * m_translation;
-        glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
+		// Draw the wireframe.
+		int stride = 2*sizeof(vec3);
+		const GLvoid* offset = (const GLvoid*)sizeof(vec3);
+		const Drawable& drawable = m_drawables[visualIndex];
 
-        // Set the projection transform.
-        float h = 4.0f * size.y / size.x;
-        mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
-        glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
-        
-        // Set the normal matrix
-		// It's orthogoal, so Its Inverse-Transpose matrix is itself!
-		mat3 normalMatrix = modelview.ToMat3();
-        glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
+		// Set the model-view transform.
+		mat4 rotation = visual->Orientation.ToMatrix();
+		mat4 modelview = rotation * m_translation;
 
-        // Set the color.
-        vec3 color = visual->Color * 0.75f;
-        glVertexAttrib3f(m_attribute.DiffuseMaterial,
-                         color.x, color.y, color.z);
-        
-        // Draw the wireframe.
-        int stride = 2*sizeof(vec3);
-        const GLvoid* offset = (const GLvoid*)sizeof(vec3);
-        const Drawable& drawable = m_drawables[visualIndex];
+		// Set the projection transform.
+		float h = 4.0f * size.y / size.x;
+		mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
 
-        glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
-        glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
-                              GL_FALSE, stride, 0);
-        glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
-                              GL_FALSE, stride, offset);
+		{
+			glUseProgram(m_triangle_program);
+			glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
+			glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.TriangleIndexBuffer);
-		glDrawElements(GL_TRIANGLES, drawable.TriangleIndexBuffer, GL_UNSIGNED_SHORT, 0);
+			// Set the normal matrix
+			// It's orthogoal, so Its Inverse-Transpose matrix is itself!
+			mat3 normalMatrix = modelview.ToMat3();
+			glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
 
-		/*
-		glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
-		glVertexAttribPointer(m_attributeLinePosition, 2, GL_FLOAT,
-							  GL_FALSE, stride, 0);
+			// Set the color.
+			vec3 color = visual->Color * 0.75f;
+			glVertexAttrib3f(m_attribute.DiffuseMaterial,
+				color.x, color.y, color.z);
 
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.LineIndexBuffer);
-		glUseProgram(m_line_program);
-		glDrawElements(GL_TRIANGLES, drawable.LineIndexBuffer, GL_UNSIGNED_SHORT, 0);
-		*/
+			glEnableVertexAttribArray(m_attribute.Position);
+			glEnableVertexAttribArray(m_attribute.Normal);
+
+			glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
+			glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
+				GL_FALSE, stride, 0);
+			glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
+				GL_FALSE, stride, offset);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.TriangleIndexBuffer);
+			glDrawElements(GL_TRIANGLES, drawable.TriangleIndexCount, GL_UNSIGNED_SHORT, 0);
+
+			glDisableVertexAttribArray(m_attribute.Position);
+			glDisableVertexAttribArray(m_attribute.Normal);
+		}
+		{
+			glUseProgram(m_line_program);
+
+			glUniformMatrix4fv(m_uniformLine.Modelview, 1, 0, modelview.Pointer());
+			glUniformMatrix4fv(m_uniformLine.Projection, 1, 0, projectionMatrix.Pointer());
+			glVertexAttrib4f(m_attributeLine.Color, 1.f, 1.f, 1.f, 1.f);
+
+			glEnableVertexAttribArray(m_attributeLine.Position);
+			glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
+			glVertexAttribPointer(m_attributeLine.Position, 3, GL_FLOAT,
+				GL_FALSE, stride, 0);
+
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.LineIndexBuffer);
+			glDrawElements(GL_LINES, drawable.LineIndexCount, GL_UNSIGNED_SHORT, 0);
+			glDisableVertexAttribArray(m_attributeLine.Position);
+		}
     }
 }
 
