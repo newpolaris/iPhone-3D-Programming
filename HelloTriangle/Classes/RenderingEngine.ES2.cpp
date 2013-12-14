@@ -60,6 +60,9 @@ public:
 private:
     GLuint BuildShader(const char* source, GLenum shaderType) const;
     GLuint BuildProgram(const char* vShader, const char* fShader) const;
+	void RenderTriangles(mat4& modelview, mat4& projectionMatrix, const vec3& color, const Drawable& drawable) const;
+	void RenderLines(mat4& modelview, mat4& projectionMatrix, const Drawable& drawable) const;
+
     vector<Drawable> m_drawables;
     // GLuint m_colorRenderbuffer;
 
@@ -212,6 +215,69 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
     m_translation = mat4::Translate(0, 0, -7);
 }
 
+void RenderingEngine::RenderTriangles(mat4& modelview,
+									  mat4& projectionMatrix,
+									  const vec3& Color,
+									  const Drawable& drawable) const
+{
+	glEnable(GL_POLYGON_OFFSET_FILL);
+
+	int stride = 2*sizeof(vec3);
+	const GLvoid* offset = (const GLvoid*)sizeof(vec3);
+
+	glUseProgram(m_triangle_program);
+	glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
+	glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
+
+	// Set the normal matrix
+	// It's orthogoal, so Its Inverse-Transpose matrix is itself!
+	mat3 normalMatrix = modelview.ToMat3();
+	glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
+
+	// Set the color.
+	vec3 color = Color * 0.75f;
+	glVertexAttrib3f(m_attribute.DiffuseMaterial,
+		color.x, color.y, color.z);
+
+	glEnableVertexAttribArray(m_attribute.Position);
+	glEnableVertexAttribArray(m_attribute.Normal);
+
+	glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
+	glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
+		GL_FALSE, stride, 0);
+	glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
+		GL_FALSE, stride, offset);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.TriangleIndexBuffer);
+	glDrawElements(GL_TRIANGLES, drawable.TriangleIndexCount, GL_UNSIGNED_SHORT, 0);
+
+	glDisableVertexAttribArray(m_attribute.Position);
+	glDisableVertexAttribArray(m_attribute.Normal);
+	glDisable(GL_POLYGON_OFFSET_FILL);
+}
+
+void RenderingEngine::RenderLines(mat4& modelview, 
+								  mat4& projectionMatrix, 
+								  const Drawable& drawable) const
+{
+	glUseProgram(m_line_program);
+
+	int stride = 2*sizeof(vec3);
+
+	glUniformMatrix4fv(m_uniformLine.Modelview, 1, 0, modelview.Pointer());
+	glUniformMatrix4fv(m_uniformLine.Projection, 1, 0, projectionMatrix.Pointer());
+	glVertexAttrib4f(m_attributeLine.Color, 1.f, 1.f, 1.f, 1.f);
+
+	glEnableVertexAttribArray(m_attributeLine.Position);
+	glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
+	glVertexAttribPointer(m_attributeLine.Position, 3, GL_FLOAT,
+		GL_FALSE, stride, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.LineIndexBuffer);
+	glDrawElements(GL_LINES, drawable.LineIndexCount, GL_UNSIGNED_SHORT, 0);
+	glDisableVertexAttribArray(m_attributeLine.Position);
+}
+
 void RenderingEngine::Render(const vector<Visual>& visuals) const
 {
     glClearColor(0.0, 0.125f, 0.25f, 1);
@@ -225,8 +291,6 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
         glViewport(lowerLeft.x, lowerLeft.y, size.x, size.y);
 
 		// Draw the wireframe.
-		int stride = 2*sizeof(vec3);
-		const GLvoid* offset = (const GLvoid*)sizeof(vec3);
 		const Drawable& drawable = m_drawables[visualIndex];
 
 		// Set the model-view transform.
@@ -237,54 +301,8 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
 		float h = 4.0f * size.y / size.x;
 		mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
 
-		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glUseProgram(m_triangle_program);
-			glUniformMatrix4fv(m_uniform.Modelview, 1, 0, modelview.Pointer());
-			glUniformMatrix4fv(m_uniform.Projection, 1, 0, projectionMatrix.Pointer());
-
-			// Set the normal matrix
-			// It's orthogoal, so Its Inverse-Transpose matrix is itself!
-			mat3 normalMatrix = modelview.ToMat3();
-			glUniformMatrix3fv(m_uniform.NormalMatrix, 1, 0, normalMatrix.Pointer());
-
-			// Set the color.
-			vec3 color = visual->Color * 0.75f;
-			glVertexAttrib3f(m_attribute.DiffuseMaterial,
-				color.x, color.y, color.z);
-
-			glEnableVertexAttribArray(m_attribute.Position);
-			glEnableVertexAttribArray(m_attribute.Normal);
-
-			glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
-			glVertexAttribPointer(m_attribute.Position, 3, GL_FLOAT, 
-				GL_FALSE, stride, 0);
-			glVertexAttribPointer(m_attribute.Normal, 3, GL_FLOAT,
-				GL_FALSE, stride, offset);
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.TriangleIndexBuffer);
-			glDrawElements(GL_TRIANGLES, drawable.TriangleIndexCount, GL_UNSIGNED_SHORT, 0);
-
-			glDisableVertexAttribArray(m_attribute.Position);
-			glDisableVertexAttribArray(m_attribute.Normal);
-			glDisable(GL_POLYGON_OFFSET_FILL);
-		}
-		{
-			glUseProgram(m_line_program);
-
-			glUniformMatrix4fv(m_uniformLine.Modelview, 1, 0, modelview.Pointer());
-			glUniformMatrix4fv(m_uniformLine.Projection, 1, 0, projectionMatrix.Pointer());
-			glVertexAttrib4f(m_attributeLine.Color, 1.f, 1.f, 1.f, 1.f);
-
-			glEnableVertexAttribArray(m_attributeLine.Position);
-			glBindBuffer(GL_ARRAY_BUFFER, drawable.VertexBuffer);
-			glVertexAttribPointer(m_attributeLine.Position, 3, GL_FLOAT,
-				GL_FALSE, stride, 0);
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, drawable.LineIndexBuffer);
-			glDrawElements(GL_LINES, drawable.LineIndexCount, GL_UNSIGNED_SHORT, 0);
-			glDisableVertexAttribArray(m_attributeLine.Position);
-		}
+		RenderTriangles(modelview, projectionMatrix, visual->Color, drawable);
+		RenderLines(modelview, projectionMatrix, drawable);
     }
 }
 
