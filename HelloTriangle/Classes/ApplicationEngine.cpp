@@ -18,7 +18,7 @@ struct Animation {
 
 class ApplicationEngine : public IApplicationEngine {
 public:
-    ApplicationEngine(IRenderingEngine* renderingEngine);
+	ApplicationEngine(IRenderingEngine* renderingEngine, IResourceManager* resourceManager);
     ~ApplicationEngine();
     void Initialize(int width, int height);
     void OnFingerUp(ivec2 location);
@@ -38,6 +38,7 @@ private:
     bool m_spinning;
     Quaternion m_orientation;
     Quaternion m_previousOrientation;
+	IResourceManager* m_resourceManager;
     IRenderingEngine* m_renderingEngine;
 	int m_currentSurface;
 	ivec2 m_buttonSize;
@@ -46,17 +47,20 @@ private:
 	Animation m_animation;
 };
 
-IApplicationEngine* AppEngineInstance()
+IApplicationEngine* CreateApplicationEngine()
 {
-	static ApplicationEngine App(ES2::CreateRenderingEngine());
+	static ApplicationEngine App(ES2::CreateRenderingEngine(),
+								 CreateResourceManager());
 
 	return &App;
 }
 
-ApplicationEngine::ApplicationEngine(IRenderingEngine* renderingEngine) :
+ApplicationEngine::ApplicationEngine(IRenderingEngine* renderingEngine,
+									 IResourceManager* resourceManager) :
     m_spinning(false),
+	m_pressedButton(-1),
     m_renderingEngine(renderingEngine),
-	m_pressedButton(-1)
+	m_resourceManager(resourceManager)
 {
 	m_animation.Active = false;
 
@@ -70,6 +74,7 @@ ApplicationEngine::ApplicationEngine(IRenderingEngine* renderingEngine) :
 
 ApplicationEngine::~ApplicationEngine()
 {
+	delete m_resourceManager;
 	delete m_renderingEngine;
 }
 
@@ -81,9 +86,15 @@ void ApplicationEngine::Initialize(int width, int height)
     m_screenSize = ivec2(width, height - m_buttonSize.y);
     m_centerPoint = m_screenSize / 2;
 
+	string path = m_resourceManager->GetResourcePath();
+
     vector<ISurface*> surfaces(SurfaceCount);
-    surfaces[0] = new Cone(3, 1);
-    surfaces[1] = new Sphere(1.4f);
+
+	using namespace std;
+	using std::string;
+
+    surfaces[0] = new ObjSurface(path + "micronapalmv2.obj");
+    surfaces[1] = new ObjSurface(path + "Ninja.obj");
     surfaces[2] = new Torus(1.4, 0.3);
     surfaces[3] = new TrefoilKnot(1.8f);
     surfaces[4] = new KleinBottle(0.2f);

@@ -1,7 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloTriangle", "HelloTriangle\HelloTriangle.vcxproj", "{2B6729E4-2AA7-45AA-93D6-1EE85E5E9F7D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ModelViewer", "HelloTriangle\HelloTriangle.vcxproj", "{2B6729E4-2AA7-45AA-93D6-1EE85E5E9F7D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2565D03E-3B4C-442B-AE17-D912AC11710F} = {2565D03E-3B4C-442B-AE17-D912AC11710F}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "esUtil", "HelloTriangle\lib\esUtil\esUtil.vcxproj", "{2565D03E-3B4C-442B-AE17-D912AC11710F}"
 EndProject

@@ -15,6 +15,15 @@ struct IApplicationEngine {
     virtual ~IApplicationEngine() {}
 };
 
+struct IResourceManager {
+	virtual string GetResourcePath() const = 0;
+	virtual ~IResourceManager() {}
+};
+
+IResourceManager* CreateResourceManager();
+IApplicationEngine* CreateApplicationEngine();
+										
+
 enum VertexFlags {
     VertexFlagsNormals = 1 << 0,
     VertexFlagsTexCoords = 1 << 1,
