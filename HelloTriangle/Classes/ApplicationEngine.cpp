@@ -1,6 +1,9 @@
+#include <algorithm>
+#include <string>
+
 #include "Interfaces.hpp"
 #include "ParametricEquations.hpp"
-#include <algorithm>
+#include "ObjectSurface.h"
 
 using namespace std;
 
@@ -47,7 +50,7 @@ private:
 	Animation m_animation;
 };
 
-IApplicationEngine* CreateApplicationEngine()
+IApplicationEngine* AppEngineInstance()
 {
 	static ApplicationEngine App(ES2::CreateRenderingEngine(),
 								 CreateResourceManager());
@@ -89,9 +92,6 @@ void ApplicationEngine::Initialize(int width, int height)
 	string path = m_resourceManager->GetResourcePath();
 
     vector<ISurface*> surfaces(SurfaceCount);
-
-	using namespace std;
-	using std::string;
 
     surfaces[0] = new ObjSurface(path + "micronapalmv2.obj");
     surfaces[1] = new ObjSurface(path + "Ninja.obj");

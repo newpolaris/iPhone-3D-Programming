@@ -2,8 +2,10 @@
 #include "Vector.hpp"
 #include "Quaternion.hpp"
 #include <vector>
+#include <iosfwd>
 
 using std::vector;
+using std::string;
 
 struct IApplicationEngine {
     virtual void Initialize(int width, int height) = 0;
@@ -19,10 +21,6 @@ struct IResourceManager {
 	virtual string GetResourcePath() const = 0;
 	virtual ~IResourceManager() {}
 };
-
-IResourceManager* CreateResourceManager();
-IApplicationEngine* CreateApplicationEngine();
-										
 
 enum VertexFlags {
     VertexFlagsNormals = 1 << 0,
@@ -54,6 +52,8 @@ struct IRenderingEngine {
 };
 
 IApplicationEngine* AppEngineInstance();
+IResourceManager* CreateResourceManager();
+
 namespace ES1 { IRenderingEngine* CreateRenderingEngine(); }
 namespace ES2 { IRenderingEngine* CreateRenderingEngine(); }
 

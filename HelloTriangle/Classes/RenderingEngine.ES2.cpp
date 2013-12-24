@@ -106,6 +106,11 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
                      vertices.size() * sizeof(vertices[0]),
                      &vertices[0],
                      GL_STATIC_DRAW);
+
+		GLenum error = glGetError();
+		if (error == GL_INVALID_ENUM) {
+			int i = 0;
+		}
         
         // Create a new VBO for the trinagle indices if needed.
         int TriangleIndexCount = (*surface)->GetTriangleIndexCount();
@@ -126,19 +131,21 @@ void RenderingEngine::Initialize(const vector<ISurface*>& surfaces)
         
         // Create a new VBO for the trinagle indices if needed.
         int LineIndexCount = (*surface)->GetLineIndexCount();
-        GLuint LineIndexBuffer;
-        if (!m_drawables.empty() 
-		 && LineIndexCount == m_drawables[0].LineIndexCount) {
-            LineIndexBuffer = m_drawables[0].LineIndexBuffer;
-        } else {
-            vector<GLushort> indices(LineIndexCount);
-            (*surface)->GenerateLineIndices(indices);
-            glGenBuffers(1, &LineIndexBuffer);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, LineIndexBuffer);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                         LineIndexCount * sizeof(GLushort),
-                         &indices[0],
-                         GL_STATIC_DRAW);
+		GLuint LineIndexBuffer = 0;
+		if (LineIndexCount != 0) {
+			if (!m_drawables.empty() 
+				&& LineIndexCount == m_drawables[0].LineIndexCount) {
+					LineIndexBuffer = m_drawables[0].LineIndexBuffer;
+			} else {
+				vector<GLushort> indices(LineIndexCount);
+				(*surface)->GenerateLineIndices(indices);
+				glGenBuffers(1, &LineIndexBuffer);
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, LineIndexBuffer);
+				glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+					LineIndexCount * sizeof(GLushort),
+					&indices[0],
+					GL_STATIC_DRAW);
+			}
         }
 
         Drawable drawable = { vertexBuffer,
@@ -302,7 +309,8 @@ void RenderingEngine::Render(const vector<Visual>& visuals) const
 		mat4 projectionMatrix = mat4::Frustum(-2, 2, -h / 2, h / 2, 5, 10);
 
 		RenderTriangles(modelview, projectionMatrix, visual->Color, drawable);
-		RenderLines(modelview, projectionMatrix, drawable);
+		if (drawable.LineIndexCount == 0)
+			RenderLines(modelview, projectionMatrix, drawable);
     }
 }
 

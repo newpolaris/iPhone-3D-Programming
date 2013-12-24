@@ -101,8 +101,10 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Classes\ApplicationEngine.cpp" />
+    <ClCompile Include="Classes\ObjectSurface.cpp" />
     <ClCompile Include="Classes\ParametricSurface.cpp" />
     <ClCompile Include="Classes\RenderingEngine.ES2.cpp" />
+    <ClCompile Include="Classes\ResourceManager.cpp" />
     <ClCompile Include="HelloTriangle.cpp">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">include;include\esUtil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -112,6 +114,7 @@ copy "$(ProjectDir)lib\$(Configuration)\libGLESv2.dll" "$(OutDir)"
   <ItemGroup>
     <ClInclude Include="Classes\Interfaces.hpp" />
     <ClInclude Include="Classes\Matrix.hpp" />
+    <ClInclude Include="Classes\ObjectSurface.h" />
     <ClInclude Include="Classes\ParametricEquations.hpp" />
     <ClInclude Include="Classes\ParametricSurface.hpp" />
     <ClInclude Include="Classes\Quaternion.hpp" />
